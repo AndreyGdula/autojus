@@ -57,14 +57,15 @@ df_novo = pd.DataFrame(dados_processos, columns=["Arquivo", "Número do Processo
 # Verificando se o arquivo Excel já existe
 if os.path.exists(excel_path):
     df_existente = pd.read_excel(excel_path)
-    if "Número do Processo" in df_existente.columns:
+    if df_existente["Número do Processo"].str.contains(df_novo["Número do Processo"].iloc[0]).any():
         confirm_edit = input(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações? [s/n] ")
         if confirm_edit.lower() == "s":
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
         else:
             print("Operação cancelada.")
-            df_final = df_existente
-    
+            df_final = df_existente 
+    else:
+        df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
 else:
     df_final = df_novo
 
