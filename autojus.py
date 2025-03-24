@@ -18,7 +18,7 @@ def extrair_texto_pdf(pdf_path):
 padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
 padrao_autor = r"Autor: (.+)"
 padrao_advogado = r"Advogado: (.+) - OAB (\d+)"
-padrao_data = r"Data de Distribuição: (\d{2}/\d{1}/\d{4})"
+padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
 
 
 def extrair_dados_processos(pdf_path):
@@ -83,7 +83,6 @@ def mover_coluna_arquivo_para_a(excel_path):
     wb.save(excel_path)
     wb.close()
 
-# Após salvar o DataFrame, mover a coluna "Arquivo" para a coluna A
 df_final.to_excel(excel_path, index=False)
 mover_coluna_arquivo_para_a(excel_path)
 sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
