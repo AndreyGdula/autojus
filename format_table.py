@@ -26,7 +26,7 @@ def format(excel_path):
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
     # Definir larguras mínimas e ajustar dinamicamente
-    larguras_minimas = {"A": 10, "B": 27, "C": 25, "D": 25, "E": 10, "F": 20}
+    larguras_minimas = {"A": 20, "B": 27, "C": 25, "D": 25, "E": 10, "F": 20}
     adjust_col(ws, larguras_minimas)
 
     for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=ws.max_column):

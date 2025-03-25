@@ -90,4 +90,5 @@ def main():
     move_col(excel_path)
     sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
 
+
 main()
