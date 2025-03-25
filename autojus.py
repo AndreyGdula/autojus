@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import fitz
 import pandas as pd
 import re
 import os
@@ -22,12 +22,47 @@ def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advo
     processos = re.findall(padrao_processo, texto_extraido)
     autores = re.findall(padrao_autor, texto_extraido)
     advogados_oab = re.findall(padrao_advogado, texto_extraido)
+    advogados_oab_processados = []
+    for adv in advogados_oab:
+        if adv[0] and adv[1]:  # Formato 1: "Advogado: nome_advogado - OAB XXXXX"
+            advogados_oab_processados.append((adv[0], adv[1]))
+        elif adv[2] and adv[3]:  # Formato 2: "Advogado: nome_advogado" e "OAB: XXXXX"
+            advogados_oab_processados.append((adv[2], adv[3]))
+
     datas = re.findall(padrao_data, texto_extraido)
+
+    # Verificar se algum padrão não foi encontrado
+    padroes_nao_encontrados = []
+    if not processos:
+        padroes_nao_encontrados.append("Número do Processo")
+    if not autores:
+        padroes_nao_encontrados.append("Autor")
+    if not advogados_oab_processados:
+        padroes_nao_encontrados.append("Advogado e OAB")
+    if not datas:
+        padroes_nao_encontrados.append("Data de Distribuição")
+
+    if padroes_nao_encontrados:
+        print(f"Os seguintes padrões não foram encontrados no arquivo PDF: {', '.join(padroes_nao_encontrados)}.")
+        continuar = input("Deseja continuar com as informações encontradas? [s/n]: ").strip().lower()
+        if continuar != "s":
+            print("Operação cancelada.")
+            return []
+
+    # Preencher valores em branco para padrões não encontrados
+    if not processos:
+        processos = [""]
+    if not autores:
+        autores = [""]
+    if not advogados_oab_processados:
+        advogados_oab_processados = [("", "")]  # Advogado e OAB são dois valores
+    if not datas:
+        datas = [""]
 
     # Organizando os dados em uma lista
     dados = []
     for i in range(len(processos)):
-        advogado, oab = advogados_oab[i]
+        advogado, oab = advogados_oab_processados[i] if i < len(advogados_oab_processados) else ("", "")
         dados.append([arquivo, processos[i], autores[i], advogado, oab, datas[i]])
 
     return dados
@@ -51,7 +86,7 @@ def main():
     # Expressões regulares para capturar as informações
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
-    padrao_advogado = r"Advogado: (.+) - OAB (\d+)"
+    padrao_advogado = r"Advogado: (.+) - OAB (\d+)|Advogado: (.+)\s+OAB: (\d+)"
     padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
 
     # Solicitar o caminho do arquivo PDF
@@ -65,8 +100,8 @@ def main():
         else:
             print("Arquivo não encontrado. Tente novamente.")
 
-    excel_path = "output/processos_extraidos.xlsx" # Caminho do Excel
-    dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_data) # Extraindo os dados
+    excel_path = "output/processos_extraidos.xlsx"  # Caminho do Excel
+    dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_data)  # Extraindo os dados
 
     # Criando um DataFrame com os novos dados
     df_novo = pd.DataFrame(dados_processos, columns=["Arquivo", "Número do Processo", "Autor", "Advogado", "OAB", "Data de Distribuição"])
@@ -79,19 +114,21 @@ def main():
             if confirm_edit.lower() == "s":
                 df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
                 print("Processo atualizado com sucesso.")
-                sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
             else:
                 print("Operação cancelada.")
-                df_final = df_existente 
+                df_final = df_existente
         else:
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
             print(f"Processos extraídos em {excel_path}")
-            sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
-
     else:
         df_final = df_novo
+        print("Arquivo criado com sucesso.")
+        print("Processos extraídos com sucesso.")
 
+    # Salvando no Excel
     df_final.to_excel(excel_path, index=False)
     move_col(excel_path)
+    sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
+
 
 main()
