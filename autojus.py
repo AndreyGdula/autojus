@@ -2,6 +2,7 @@ import fitz
 import pandas as pd
 import re
 import os
+import sys
 import subprocess as sb
 from openpyxl import load_workbook
 
@@ -91,7 +92,7 @@ def main():
 
     # Solicitar o caminho do arquivo PDF
     while True:
-        pdf_path = input("Caminho do arquivo PDF: ")
+        pdf_path = sys.argv[1]
         if os.path.exists(pdf_path):
             if pdf_path.lower().endswith(".pdf") or pdf_path.lower().endswith(".docx") or pdf_path.lower().endswith(".doc"):
                 break
