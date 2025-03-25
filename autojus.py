@@ -58,7 +58,10 @@ def main():
     while True:
         pdf_path = input("Caminho do arquivo PDF: ")
         if os.path.exists(pdf_path):
-            break
+            if pdf_path.lower().endswith(".pdf") or pdf_path.lower().endswith(".docx") or pdf_path.lower().endswith(".doc"):
+                break
+            else:
+                print("Arquivo inválido. Por favor, insira um arquivo PDF ou Word")
         else:
             print("Arquivo não encontrado. Tente novamente.")
 
@@ -76,19 +79,19 @@ def main():
             if confirm_edit.lower() == "s":
                 df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
                 print("Processo atualizado com sucesso.")
+                sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
             else:
                 print("Operação cancelada.")
                 df_final = df_existente 
         else:
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
             print(f"Processos extraídos em {excel_path}")
+            sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
 
     else:
         df_final = df_novo
 
     df_final.to_excel(excel_path, index=False)
     move_col(excel_path)
-    sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
-
 
 main()
