@@ -14,14 +14,7 @@ def extrair_texto_pdf(pdf_path):
             texto += page.get_text("text") + "\n"
     return texto
 
-# Expressões regulares para capturar as informações
-padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
-padrao_autor = r"Autor: (.+)"
-padrao_advogado = r"Advogado: (.+) - OAB (\d+)"
-padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
-
-
-def extrair_dados_processos(pdf_path):
+def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_data):
     texto_extraido = extrair_texto_pdf(pdf_path)
 
     # Encontrando todas as ocorrências
@@ -39,38 +32,8 @@ def extrair_dados_processos(pdf_path):
 
     return dados
 
-
-while True:
-    pdf_path = input("Caminho do arquivo PDF: ") # Caminho do PDF
-    if os.path.exists(pdf_path):
-        break
-    else:
-        print("Arquivo não encontrado. Tente novamente.")
-
-excel_path = "output/processos_extraidos.xlsx" # Caminho do Excel
-
-dados_processos = extrair_dados_processos(pdf_path) # Extraindo os dados
-
-# Criando um DataFrame com os novos dados
-df_novo = pd.DataFrame(dados_processos, columns=["Arquivo", "Número do Processo", "Autor", "Advogado", "OAB", "Data de Distribuição"])
-
-# Verificando se o arquivo Excel já existe
-if os.path.exists(excel_path):
-    df_existente = pd.read_excel(excel_path)
-    if df_existente["Número do Processo"].str.contains(df_novo["Número do Processo"].iloc[0]).any():
-        confirm_edit = input(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações? [s/n] ")
-        if confirm_edit.lower() == "s":
-            df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
-        else:
-            print("Operação cancelada.")
-            df_final = df_existente 
-    else:
-        df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
-else:
-    df_final = df_novo
-
-# Garantir que a coluna "Arquivo" fique na coluna A
-def mover_coluna_arquivo_para_a(excel_path):
+# Garantir que a coluna Arquivo fique na coluna A
+def move_col(excel_path):
     wb = load_workbook(excel_path)
     ws = wb.active
 
@@ -83,8 +46,48 @@ def mover_coluna_arquivo_para_a(excel_path):
     wb.save(excel_path)
     wb.close()
 
-df_final.to_excel(excel_path, index=False)
-mover_coluna_arquivo_para_a(excel_path)
-sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
 
-print(f"Processos extraídos e atualizados em {excel_path}")
+def main():
+    # Expressões regulares para capturar as informações
+    padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
+    padrao_autor = r"Autor: (.+)"
+    padrao_advogado = r"Advogado: (.+) - OAB (\d+)"
+    padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
+
+    # Solicitar o caminho do arquivo PDF
+    while True:
+        pdf_path = input("Caminho do arquivo PDF: ")
+        if os.path.exists(pdf_path):
+            break
+        else:
+            print("Arquivo não encontrado. Tente novamente.")
+
+    excel_path = "output/processos_extraidos.xlsx" # Caminho do Excel
+    dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_data) # Extraindo os dados
+
+    # Criando um DataFrame com os novos dados
+    df_novo = pd.DataFrame(dados_processos, columns=["Arquivo", "Número do Processo", "Autor", "Advogado", "OAB", "Data de Distribuição"])
+
+    # Verificando se o arquivo Excel já existe
+    if os.path.exists(excel_path):
+        df_existente = pd.read_excel(excel_path)
+        if df_existente["Número do Processo"].str.contains(df_novo["Número do Processo"].iloc[0]).any():
+            confirm_edit = input(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações? [s/n] ")
+            if confirm_edit.lower() == "s":
+                df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
+                print("Processo atualizado com sucesso.")
+            else:
+                print("Operação cancelada.")
+                df_final = df_existente 
+        else:
+            df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
+            print(f"Processos extraídos em {excel_path}")
+
+    else:
+        df_final = df_novo
+
+    df_final.to_excel(excel_path, index=False)
+    move_col(excel_path)
+    sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
+
+main()

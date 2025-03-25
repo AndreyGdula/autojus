@@ -36,7 +36,6 @@ def format(excel_path):
             cell.fill = PatternFill(start_color="b8d9ff", end_color="b8d9ff", fill_type="solid")
 
     wb.save(excel_path)
-    print("Tabela formatada com sucesso!")
 
 excel_path = sys.argv[1]
 format(excel_path)
