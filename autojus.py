@@ -40,8 +40,7 @@ def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advo
         padroes_nao_encontrados.append("Data de Distribuição")
 
     if padroes_nao_encontrados:
-        message_callback(f"Os seguintes padrões não foram encontrados no arquivo PDF: {', '.join(padroes_nao_encontrados)}.")
-        continuar = confirm_callback("Deseja continuar com as informações encontradas?")
+        continuar = confirm_callback(f"Os seguintes padrões não foram encontrados no arquivo PDF: {', '.join(padroes_nao_encontrados)}.\nDeseja continuar com as informações encontradas?")
         if not continuar:
             message_callback("Operação cancelada.")
             return []
