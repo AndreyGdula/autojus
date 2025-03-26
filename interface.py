@@ -1,10 +1,10 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import subprocess as sb
-import os
+from autojus import main
 
 
-class InterfaceApp(ctk.CTk):
+class Interface(ctk.CTk):
     def __init__(self):
         super().__init__()
 
@@ -15,7 +15,7 @@ class InterfaceApp(ctk.CTk):
         ctk.set_default_color_theme("blue")  # Tema azul
 
         # Título
-        self.label_title = ctk.CTkLabel(self, text="Processador de Arquivos Jurídicos", font=("Arial", 20))
+        self.label_title = ctk.CTkLabel(self, text="Extraia seus processos para o Excel", font=("Arial", 20))
         self.label_title.pack(pady=20)
 
         # Botão para selecionar e processar arquivo
@@ -40,16 +40,23 @@ class InterfaceApp(ctk.CTk):
         # Executar o script principal
         try:
             self.text_output.insert("end", f"Processando o arquivo: {arquivo}\n")
-            sb.run(["python", "autojus.py", arquivo], check=True)
+            main(arquivo, self.confirm, self.message_callback)
             self.text_output.insert("end", "Arquivo extraído com sucesso\n")
         except sb.CalledProcessError as e:
             self.text_output.insert("end", f"Erro ao processar o arquivo: {e}\n")
             messagebox.showerror("Erro", "Ocorreu um erro ao processar o arquivo.")
         except Exception as e:
             self.text_output.insert("end", f"Erro inesperado: {e}\n")
-            messagebox.showerror("Erro", "Ocorreu um erro inesperado.")
+            messagebox.showerror("Erro Inesperado", f"{e}")
+
+
+    def confirm(self, msg):
+        return messagebox.askyesno("Confirmação", msg)
+    
+    def message_callback(self, msg):
+        return messagebox.showinfo("Info", msg)
 
 
 if __name__ == "__main__":
-    app = InterfaceApp()
+    app = Interface()
     app.mainloop()
