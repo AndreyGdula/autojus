@@ -1,62 +1,90 @@
-import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox
+from PyQt6.QtCore import Qt
+import sys
 import subprocess as sb
 from autojus import main
 
 
-class Interface(ctk.CTk):
+class Interface(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Configurações da janela principal
-        self.title("AutomaticJus")
-        self.geometry("600x400")
-        ctk.set_appearance_mode("System")  # Modo claro ou escuro
-        ctk.set_default_color_theme("blue")  # Tema azul
+        # Configuração da janela principal
+        self.setWindowTitle("AutomaticJus")
+        self.setGeometry(100, 100, 600, 400)
 
-        # Título
-        self.label_title = ctk.CTkLabel(self, text="Extraia seus processos para o Excel", font=("Arial", 20))
-        self.label_title.pack(pady=20)
+        # Cores
+        color1 = "#2b2b2b"
+        color2 = "#3b8ed0"
 
-        # Botão para selecionar e processar arquivo
-        self.btn_processar = ctk.CTkButton(self, text="Selecionar e Processar Arquivo", command=self.processar_arquivo)
-        self.btn_processar.pack(pady=20)
+        # Label
+        self.label_title = QLabel("Extraia seus processos para o Excel", self)
+        self.label_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_title.setGeometry(50, 20, 500, 30)
 
-        # Área de mensagens
-        self.text_output = ctk.CTkTextbox(self, width=500, height=150)
-        self.text_output.pack(pady=20)
+        # Contêiner para o QLineEdit e o botão
+        self.container = QWidget(self)
+        self.container.setGeometry(50, 80, 500, 40)
 
-    def processar_arquivo(self):
+        # Campo de entrada
+        self.entry_path_pdf = QLineEdit(self.container)
+        self.entry_path_pdf.setPlaceholderText("Caminho do arquivo PDF")
+        self.entry_path_pdf.setGeometry(0, 0, 450, 40)
+        self.entry_path_pdf.setStyleSheet(f"""
+            padding: 10px;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border: 2px solid {color2};
+            border-right: none;
+            background-color: {color1};
+            color: white;
+        """)
+
+        # Botão
+        self.btn_path_pdf = QPushButton("Selecionar", self.container)
+        self.btn_path_pdf.setGeometry(400, 0, 100, 40)  # Posiciona o botão no canto direito
+        self.btn_path_pdf.setStyleSheet(f"""
+            padding: 10px;
+            border-radius: 20px;
+            border: 2px solid {color2};
+            background-color: {color2};
+            color: white;
+            font-weight: bold;
+        """)
+        self.btn_path_pdf.clicked.connect(self.selecionar_arquivo)
+
+    def selecionar_arquivo(self):
         # Selecionar arquivo
-        arquivo = filedialog.askopenfilename(filetypes=[("Arquivos PDF e Word", "*.pdf *.docx *.doc")])
+        arquivo, _ = QFileDialog.getOpenFileName(self, "Selecione um arquivo", "", "Arquivos PDF e Word (*.pdf *.docx *.doc)")
         if not arquivo:
             return
 
+        self.entry_path_pdf.setText(arquivo)
+
         # Verificar extensão do arquivo
         if not (arquivo.lower().endswith(".pdf") or arquivo.lower().endswith(".docx") or arquivo.lower().endswith(".doc")):
-            messagebox.showerror("Erro", "Arquivo inválido. Por favor, insira um arquivo PDF ou Word.")
+            QMessageBox.critical(self, "Erro", "Arquivo inválido. Por favor, insira um arquivo PDF ou Word.")
             return
 
         # Executar o script principal
         try:
-            self.text_output.insert("end", f"Processando o arquivo: {arquivo}\n")
             main(arquivo, self.confirm, self.message_callback)
-            self.text_output.insert("end", "Arquivo extraído com sucesso\n")
+            QMessageBox.information(self, "Sucesso", "Arquivo extraído com sucesso!")
         except sb.CalledProcessError as e:
-            self.text_output.insert("end", f"Erro ao processar o arquivo: {e}\n")
-            messagebox.showerror("Erro", "Ocorreu um erro ao processar o arquivo.")
+            QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
         except Exception as e:
-            self.text_output.insert("end", f"Erro inesperado: {e}\n")
-            messagebox.showerror("Erro Inesperado", f"{e}")
-
+            QMessageBox.critical(self, "Erro Inesperado", f"{e}")
 
     def confirm(self, msg):
-        return messagebox.askyesno("Confirmação", msg)
+        return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
     
     def message_callback(self, msg):
-        return messagebox.showinfo("Info", msg)
+        QMessageBox.information(self, "Info", msg)
 
 
 if __name__ == "__main__":
-    app = Interface()
-    app.mainloop()
+    app = QApplication(sys.argv)
+    window = Interface()
+    window.show()
+    sys.exit(app.exec())

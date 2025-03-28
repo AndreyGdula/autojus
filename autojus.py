@@ -80,7 +80,7 @@ def move_col(excel_path):
 
 
 def main(pdf_path, confirm_callback, message_callback):
-    # Expressões regulares para capturar as informações
+    # Regex
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
     padrao_advogado = r"Advogado: ([^-]+)"
