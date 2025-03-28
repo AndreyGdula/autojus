@@ -26,24 +26,30 @@ class Interface(QWidget):
         # Contêiner para o QLineEdit e o botão
         self.container = QWidget(self)
         self.container.setGeometry(50, 80, 500, 40)
+        self.container.setStyleSheet(f"""
+            background-color: {color1};
+            border: 2px solid {color2};
+            border-radius: 20px;""")
 
         # Campo de entrada
         self.entry_path_pdf = QLineEdit(self.container)
         self.entry_path_pdf.setPlaceholderText("Caminho do arquivo PDF")
-        self.entry_path_pdf.setGeometry(0, 0, 450, 40)
+        self.entry_path_pdf.setGeometry(10, 2, 395, 36)
+        self.entry_path_pdf.setReadOnly(True)
+        self.entry_path_pdf.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.entry_path_pdf.setStyleSheet(f"""
             padding: 10px;
             border-top-left-radius: 20px;
             border-bottom-left-radius: 20px;
-            border: 2px solid {color2};
+            border: none;
             border-right: none;
-            background-color: {color1};
+            background-color: transparent;
             color: white;
         """)
 
         # Botão
         self.btn_path_pdf = QPushButton("Selecionar", self.container)
-        self.btn_path_pdf.setGeometry(400, 0, 100, 40)  # Posiciona o botão no canto direito
+        self.btn_path_pdf.setGeometry(400, 0, 100, 40)
         self.btn_path_pdf.setStyleSheet(f"""
             padding: 10px;
             border-radius: 20px;
@@ -61,6 +67,7 @@ class Interface(QWidget):
             return
 
         self.entry_path_pdf.setText(arquivo)
+        self.entry_path_pdf.setCursorPosition(len(self.entry_path_pdf.text()))
 
         # Verificar extensão do arquivo
         if not (arquivo.lower().endswith(".pdf") or arquivo.lower().endswith(".docx") or arquivo.lower().endswith(".doc")):
