@@ -10,6 +10,7 @@ from autojus import main
 class Interface(QWidget):
     def __init__(self):
         super().__init__()
+        self.flag_export = False # Flag da condição do botão de exportar
 
         # Definindo as cores
         self.color1 = "#2b2b2b"
@@ -141,6 +142,9 @@ class Interface(QWidget):
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
 
     def selecionar_arquivo_pdf(self):
+        if self.flag_export:
+            self.resetar_botao()
+
         # Selecionar arquivo de entrada
         pdf_path, _ = QFileDialog.getOpenFileName(self, "Selecione um arquivo", "", "Arquivos PDF e Word (*.pdf *.docx *.doc)")
         if not pdf_path:
@@ -170,6 +174,9 @@ class Interface(QWidget):
             return
 
     def selecionar_arquivo_excel(self):
+        if self.flag_export:
+            self.resetar_botao()
+
         # Selecionar local da exportação
         excel_path, _ = QFileDialog.getSaveFileName(self, "Selecione um arquivo", "", "Arquivos Excel (*.xlsx)")
         if not excel_path:
@@ -200,13 +207,13 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro Inesperado", f"{e}")
 
     def animar_botao(self):
+        self.flag_export = True
         effect = QGraphicsColorizeEffect(self.btn_exportar)
         self.btn_exportar.setGraphicsEffect(effect)
-        self.btn_exportar.setText("EXPORTADO COM SUCESSO")
 
         # Configuração da animação
         self.anima = QPropertyAnimation(effect, b"color")
-        self.anima.setDuration(100) # Duração
+        self.anima.setDuration(250) # Duração
         self.anima.setStartValue(QColor(self.color2)) # Cor inicial
         self.anima.setEndValue(QColor(self.color_confirm)) # Cor final
         self.anima.setEasingCurve(QEasingCurve.Type.InOutQuad)
@@ -222,7 +229,46 @@ class Interface(QWidget):
         """))
         self.animar_texto("EXPORTADO COM SUCESSO")
 
-    def animar_texto(self, texto_final):
+    def resetar_botao(self):
+        self.flag_export = False
+
+        self.btn_exportar.setGraphicsEffect(None)
+        self.anima_reset = QPropertyAnimation(self.btn_exportar, b"styleSheet")
+        self.anima_reset.setDuration(250)
+        self.anima_reset.setStartValue(self.btn_exportar.styleSheet())
+        self.anima_reset.setEndValue(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color2};
+                color: white;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+        """)
+        
+        self.anima_reset.start()
+        self.anima_reset.finished.connect(lambda: self.btn_exportar.setStyleSheet(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color2};
+                color: white;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+        """))
+        self.animar_texto("Exportar", 50)
+
+    def animar_texto(self, texto_final, time=25):
         self.texto_atual = ""
         self.indice_texto = 0
 
@@ -236,7 +282,8 @@ class Interface(QWidget):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(atualizar_texto)
-        self.timer.start(25)  # Tempo de atualização em milissegundos
+        self.timer.start(time)  # Tempo de atualização em milissegundos
+
 
     def confirm(self, msg):
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes

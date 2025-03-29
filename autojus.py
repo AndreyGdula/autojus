@@ -99,13 +99,11 @@ def main(pdf_path, excel_path, confirm_callback, message_callback):
             confirm_edit = confirm_callback(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações?")
             if confirm_edit:
                 df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
-                message_callback("Processo atualizado com sucesso.")
             else:
                 message_callback("Operação cancelada.")
                 df_final = df_existente
         else:
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
-            message_callback(f"Processos extraídos em {excel_path}")
     else:
         df_final = df_novo
 
