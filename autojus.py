@@ -79,7 +79,7 @@ def move_col(excel_path):
     wb.close()
 
 
-def main(pdf_path, confirm_callback, message_callback):
+def main(pdf_path, excel_path, confirm_callback, message_callback):
     # Regex
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
@@ -87,7 +87,6 @@ def main(pdf_path, confirm_callback, message_callback):
     padrao_oab = r"OAB[:\s]+(\d+)"
     padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
 
-    excel_path = "output/processos_extraidos.xlsx"  # Caminho do Excel
     dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback, message_callback)  # Extraindo os dados
 
     # Criando um DataFrame com os novos dados

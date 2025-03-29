@@ -1,5 +1,7 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect
+from pathlib import Path
 import sys
 import subprocess as sb
 from autojus import main
@@ -9,13 +11,17 @@ class Interface(QWidget):
     def __init__(self):
         super().__init__()
 
+        # Definindo as cores
+        self.color1 = "#2b2b2b"
+        self.color2 = "#3b8ed0"
+        self.color1_hover = "#4c4c4d"
+        self.color2_hover = "#285e89"
+        self.color_disabled = "#1e4668"
+        self.color_confirm = "#025f17"
+
         # Configuração da janela principal
         self.setWindowTitle("AutomaticJus")
         self.setGeometry(100, 100, 600, 400)
-
-        # Cores
-        color1 = "#2b2b2b"
-        color2 = "#3b8ed0"
 
         # Label
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
@@ -23,18 +29,24 @@ class Interface(QWidget):
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_title.setGeometry(50, 20, 500, 30)
 
-        # Contêiner para o QLineEdit e o botão
-        self.container = QWidget(self)
-        self.container.setGeometry(50, 80, 500, 40)
-        self.container.setStyleSheet(f"""
-            background-color: {color1};
-            border: 2px solid {color2};
-            border-radius: 20px;""")
+        # container_pdf de entrada de arquivo
+        self.container_pdf = QWidget(self)
+        self.container_pdf.setGeometry(50, 100, 500, 40)
+        self.container_pdf.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.color1};
+                border: 2px solid {self.color2};
+                border-radius: 20px;
+            }}
+            QWidget:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+            """)
 
-        # Campo de entrada
-        self.entry_path_pdf = QLineEdit(self.container)
+        self.entry_path_pdf = QLineEdit(self.container_pdf)
         self.entry_path_pdf.setPlaceholderText("Caminho do arquivo PDF")
-        self.entry_path_pdf.setGeometry(10, 2, 395, 36)
+        self.entry_path_pdf.setGeometry(10, 2, 375, 36)
         self.entry_path_pdf.setReadOnly(True)
         self.entry_path_pdf.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.entry_path_pdf.setStyleSheet(f"""
@@ -42,46 +54,189 @@ class Interface(QWidget):
             border-top-left-radius: 20px;
             border-bottom-left-radius: 20px;
             border: none;
-            border-right: none;
             background-color: transparent;
             color: white;
         """)
 
-        # Botão
-        self.btn_path_pdf = QPushButton("Selecionar", self.container)
-        self.btn_path_pdf.setGeometry(400, 0, 100, 40)
+        self.btn_path_pdf = QPushButton("Selecionar", self.container_pdf)
+        self.btn_path_pdf.setGeometry(380, 0, 120, 40)
         self.btn_path_pdf.setStyleSheet(f"""
-            padding: 10px;
-            border-radius: 20px;
-            border: 2px solid {color2};
-            background-color: {color2};
-            color: white;
-            font-weight: bold;
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color2};
+                color: white;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
         """)
-        self.btn_path_pdf.clicked.connect(self.selecionar_arquivo)
+        self.btn_path_pdf.clicked.connect(self.selecionar_arquivo_pdf)
 
-    def selecionar_arquivo(self):
-        # Selecionar arquivo
-        arquivo, _ = QFileDialog.getOpenFileName(self, "Selecione um arquivo", "", "Arquivos PDF e Word (*.pdf *.docx *.doc)")
-        if not arquivo:
+
+        # container_pdf do excel
+        self.container_excel = QWidget(self)
+        self.container_excel.setGeometry(50, 180, 500, 40)
+        self.container_excel.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.color1};
+                border: 2px solid {self.color2};
+                border-radius: 20px;
+            }}
+            QWidget:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+            """)
+        
+        self.entry_excel = QLineEdit(self.container_excel)
+        self.entry_excel.setPlaceholderText("Desktop/processos_extraidos.xlsx")
+        self.entry_excel.setGeometry(10, 2, 375, 36)
+        self.entry_excel.setReadOnly(True)
+        self.entry_excel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.entry_excel.setStyleSheet("""
+            padding: 10px;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border: none;
+            background-color: transparent;
+            color: white;
+            """)
+        
+        self.btn_path_excel = QPushButton("Selecionar", self.container_excel)
+        self.btn_path_excel.setGeometry(380, 0, 120, 40)
+        self.btn_path_excel.setStyleSheet(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color2};
+                color: white;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+            """)
+        self.btn_path_excel.clicked.connect(self.selecionar_arquivo_excel)
+
+        # Botão de exportação
+        self.btn_exportar = QPushButton("Exportar", self)
+        self.btn_exportar.setGeometry(50, 260, 500, 40)
+        self.btn_exportar.setEnabled(False)
+        self.btn_exportar.setStyleSheet("""
+            QPushButton {
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid #1e4668;
+                background-color: #1e4668;
+                color: gray;
+                font-weight: bold;
+            }
+        """)
+        self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
+
+    def selecionar_arquivo_pdf(self):
+        # Selecionar arquivo de entrada
+        pdf_path, _ = QFileDialog.getOpenFileName(self, "Selecione um arquivo", "", "Arquivos PDF e Word (*.pdf *.docx *.doc)")
+        if not pdf_path:
             return
 
-        self.entry_path_pdf.setText(arquivo)
+        self.entry_path_pdf.setText(pdf_path)
         self.entry_path_pdf.setCursorPosition(len(self.entry_path_pdf.text()))
+        self.btn_exportar.setEnabled(True)
+        self.btn_exportar.setStyleSheet(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color2};
+                color: white;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+            """)
 
         # Verificar extensão do arquivo
-        if not (arquivo.lower().endswith(".pdf") or arquivo.lower().endswith(".docx") or arquivo.lower().endswith(".doc")):
+        if not (pdf_path.lower().endswith(".pdf") or pdf_path.lower().endswith(".docx") or pdf_path.lower().endswith(".doc")):
             QMessageBox.critical(self, "Erro", "Arquivo inválido. Por favor, insira um arquivo PDF ou Word.")
             return
 
-        # Executar o script principal
+    def selecionar_arquivo_excel(self):
+        # Selecionar local da exportação
+        excel_path, _ = QFileDialog.getSaveFileName(self, "Selecione um arquivo", "", "Arquivos Excel (*.xlsx)")
+        if not excel_path:
+            return
+        self.entry_excel.setText(excel_path)
+        self.entry_excel.setCursorPosition(len(self.entry_excel.text()))
+
+        # Verificar extensão do arquivo
+        if not excel_path.lower().endswith(".xlsx"):
+            QMessageBox.critical(self, "Erro", "Arquivo inválido. Por favor, insira um arquivo Excel.")
+            return
+
+    def exportar(self, pdf_path, excel_path):
+        # Obter path da área de trabalho
+        desktop_path = Path.home() / "Desktop"
+        if not excel_path:
+            excel_path = desktop_path / "processos_extraidos.xlsx"
+
+        # Simular exportação
         try:
-            main(arquivo, self.confirm, self.message_callback)
-            QMessageBox.information(self, "Sucesso", "Arquivo extraído com sucesso!")
+            # Aqui você pode adicionar a lógica de exportação
+            main(pdf_path, excel_path, self.confirm, self.message_callback)
+            self.animar_botao()
+
         except sb.CalledProcessError as e:
             QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
         except Exception as e:
             QMessageBox.critical(self, "Erro Inesperado", f"{e}")
+
+    def animar_botao(self):
+        effect = QGraphicsColorizeEffect(self.btn_exportar)
+        self.btn_exportar.setGraphicsEffect(effect)
+        self.btn_exportar.setText("EXPORTADO COM SUCESSO")
+
+        # Configuração da animação
+        self.anima = QPropertyAnimation(effect, b"color")
+        self.anima.setDuration(100) # Duração
+        self.anima.setStartValue(QColor(self.color2)) # Cor inicial
+        self.anima.setEndValue(QColor(self.color_confirm)) # Cor final
+        self.anima.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.anima.start()
+        self.anima.finished.connect(lambda: self.btn_exportar.setStyleSheet("""
+            padding: 10px;
+            border-radius: 20px;
+            border: 2px solid #025f17;
+            background-color: #025f17;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        """))
+        self.animar_texto("EXPORTADO COM SUCESSO")
+
+    def animar_texto(self, texto_final):
+        self.texto_atual = ""
+        self.indice_texto = 0
+
+        def atualizar_texto():
+            if self.indice_texto < len(texto_final):
+                self.texto_atual += texto_final[self.indice_texto]
+                self.btn_exportar.setText(self.texto_atual)
+                self.indice_texto += 1
+            else:
+                self.timer.stop()
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(atualizar_texto)
+        self.timer.start(25)  # Tempo de atualização em milissegundos
 
     def confirm(self, msg):
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
