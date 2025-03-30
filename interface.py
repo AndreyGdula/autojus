@@ -129,15 +129,15 @@ class Interface(QWidget):
         self.btn_exportar = QPushButton("Exportar", self)
         self.btn_exportar.setGeometry(50, 260, 500, 40)
         self.btn_exportar.setEnabled(False)
-        self.btn_exportar.setStyleSheet("""
-            QPushButton {
+        self.btn_exportar.setStyleSheet(f"""
+            QPushButton {{
                 padding: 10px;
                 border-radius: 20px;
-                border: 2px solid #1e4668;
-                background-color: #1e4668;
+                border: 2px solid {self.color_disabled};
+                background-color: {self.color_disabled};
                 color: gray;
                 font-weight: bold;
-            }
+            }}
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
 
@@ -218,11 +218,11 @@ class Interface(QWidget):
         self.anima.setEndValue(QColor(self.color_confirm)) # Cor final
         self.anima.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.anima.start()
-        self.anima.finished.connect(lambda: self.btn_exportar.setStyleSheet("""
+        self.anima.finished.connect(lambda: self.btn_exportar.setStyleSheet(f"""
             padding: 10px;
             border-radius: 20px;
-            border: 2px solid #025f17;
-            background-color: #025f17;
+            border: 2px solid {self.color_confirm};
+            background-color: {self.color_confirm};
             color: white;
             font-weight: bold;
             font-size: 16px;
