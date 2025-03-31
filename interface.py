@@ -190,16 +190,16 @@ class Interface(QWidget):
             return
 
     def exportar(self, pdf_path, excel_path):
+        if self.flag_export:
+            self.resetar_botao()
+
         # Obter path da área de trabalho
         desktop_path = Path.home() / "Desktop"
         if not excel_path:
             excel_path = desktop_path / "processos_extraidos.xlsx"
 
-        # Simular exportação
         try:
-            # Aqui você pode adicionar a lógica de exportação
-            main(pdf_path, excel_path, self.confirm, self.message_callback)
-            self.animar_botao()
+            main(pdf_path, excel_path, self.confirm, self.animar_botao)
 
         except sb.CalledProcessError as e:
             QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
@@ -287,9 +287,6 @@ class Interface(QWidget):
 
     def confirm(self, msg):
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
-    
-    def message_callback(self, msg):
-        QMessageBox.information(self, "Info", msg)
 
 
 if __name__ == "__main__":

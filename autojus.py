@@ -15,7 +15,7 @@ def extrair_texto_pdf(pdf_path):
             texto += page.get_text("text") + "\n"
     return texto
 
-def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback=None, message_callback=None):
+def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback=None):
     texto_extraido = extrair_texto_pdf(pdf_path)
 
     # Encontrando todas as ocorrências
@@ -42,7 +42,6 @@ def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advo
     if padroes_nao_encontrados:
         continuar = confirm_callback(f"Os seguintes padrões não foram encontrados no arquivo PDF: {', '.join(padroes_nao_encontrados)}.\nDeseja continuar com as informações encontradas?")
         if not continuar:
-            message_callback("Operação cancelada.")
             return []
 
     # Preencher valores em branco para padrões não encontrados
@@ -79,7 +78,7 @@ def move_col(excel_path):
     wb.close()
 
 
-def main(pdf_path, excel_path, confirm_callback, message_callback):
+def main(pdf_path, excel_path, confirm_callback, anima_botao):
     # Regex
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
@@ -87,7 +86,7 @@ def main(pdf_path, excel_path, confirm_callback, message_callback):
     padrao_oab = r"OAB[:\s]+(\d+)"
     padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
 
-    dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback, message_callback)  # Extraindo os dados
+    dados_processos = extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback)  # Extraindo os dados
 
     # Criando um DataFrame com os novos dados
     df_novo = pd.DataFrame(dados_processos, columns=["Arquivo", "Número do Processo", "Autor", "Advogado", "OAB", "Data de Distribuição"])
@@ -98,12 +97,13 @@ def main(pdf_path, excel_path, confirm_callback, message_callback):
         if df_existente["Número do Processo"].str.contains(df_novo["Número do Processo"].iloc[0]).any():
             confirm_edit = confirm_callback(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações?")
             if confirm_edit:
-                df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
+                df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last") # Operação realizada com sucesso
+                anima_botao()
             else:
-                message_callback("Operação cancelada.")
                 df_final = df_existente
         else:
-            df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last")
+            df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last") # Operação realizada com sucesso
+            anima_botao()
     else:
         df_final = df_novo
 
