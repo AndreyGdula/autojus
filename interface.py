@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect
 from pathlib import Path
 import sys
@@ -22,7 +22,9 @@ class Interface(QWidget):
 
         # Configuração da janela principal
         self.setWindowTitle("AutomaticJus")
+        self.setWindowIcon(QIcon("img/autojus_icon.ico"))
         self.setGeometry(100, 100, 600, 400)
+        self.setFixedSize(600, 400)
 
         # Label
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
