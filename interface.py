@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect
 from pathlib import Path
 import sys
@@ -19,10 +19,12 @@ class Interface(QWidget):
         self.color2_hover = "#285e89"
         self.color_disabled = "#1e4668"
         self.color_confirm = "#025f17"
+        self.font_id = QFontDatabase.addApplicationFont("assets/JosefinSans-VariableFont_wght.ttf")
+        self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
 
         # Configuração da janela principal
         self.setWindowTitle("AutomaticJus")
-        self.setWindowIcon(QIcon("img/autojus_icon.ico"))
+        self.setWindowIcon(QIcon("assets/autojus_icon.ico"))
         self.setGeometry(100, 100, 600, 400)
         self.setFixedSize(600, 400)
 
@@ -71,6 +73,7 @@ class Interface(QWidget):
                 background-color: {self.color2};
                 color: white;
                 font-weight: bold;
+                font-family: {self.font_family};
             }}
             QPushButton:hover {{
                 background-color: {self.color2_hover};
@@ -119,6 +122,7 @@ class Interface(QWidget):
                 background-color: {self.color2};
                 color: white;
                 font-weight: bold;
+                font-family: {self.font_family};
             }}
             QPushButton:hover {{
                 background-color: {self.color2_hover};
@@ -128,7 +132,7 @@ class Interface(QWidget):
         self.btn_path_excel.clicked.connect(self.selecionar_arquivo_excel)
 
         # Botão de exportação
-        self.btn_exportar = QPushButton("Exportar", self)
+        self.btn_exportar = QPushButton("EXPORTAR", self)
         self.btn_exportar.setGeometry(50, 260, 500, 40)
         self.btn_exportar.setEnabled(False)
         self.btn_exportar.setStyleSheet(f"""
@@ -139,6 +143,7 @@ class Interface(QWidget):
                 background-color: {self.color_disabled};
                 color: gray;
                 font-weight: bold;
+                font-family: {self.font_family};
             }}
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
@@ -268,7 +273,7 @@ class Interface(QWidget):
                 border-color: {self.color2_hover};
             }}
         """))
-        self.animar_texto("Exportar", 50)
+        self.animar_texto("EXPORTAR", 50)
 
     def animar_texto(self, texto_final, time=25):
         self.texto_atual = ""
