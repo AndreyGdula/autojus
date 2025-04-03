@@ -132,7 +132,7 @@ class Interface(QWidget):
         self.btn_path_excel.clicked.connect(self.selecionar_arquivo_excel)
 
         # Botão de exportação
-        self.btn_exportar = QPushButton("EXPORTAR", self)
+        self.btn_exportar = QPushButton("Exportar", self)
         self.btn_exportar.setGeometry(50, 260, 500, 40)
         self.btn_exportar.setEnabled(False)
         self.btn_exportar.setStyleSheet(f"""
@@ -273,7 +273,7 @@ class Interface(QWidget):
                 border-color: {self.color2_hover};
             }}
         """))
-        self.animar_texto("EXPORTAR", 50)
+        self.animar_texto("Exportar", 50)
 
     def animar_texto(self, texto_final, time=25):
         self.texto_atual = ""
