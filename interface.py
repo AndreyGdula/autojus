@@ -19,8 +19,12 @@ class Interface(QWidget):
         self.color2_hover = "#285e89"
         self.color_disabled = "#1e4668"
         self.color_confirm = "#025f17"
+
+        # Definindo as fontes
         self.font_id = QFontDatabase.addApplicationFont("assets/JosefinSans-VariableFont_wght.ttf")
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
+        self.font_label_id = QFontDatabase.addApplicationFont("assets/WorkSans-MediumItalic.ttf")
+        self.font_label = QFontDatabase.applicationFontFamilies(self.font_label_id)[0]
 
         # Configuração da janela principal
         self.setWindowTitle("AutomaticJus")
@@ -32,7 +36,8 @@ class Interface(QWidget):
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
         self.label_title.setStyleSheet("font-size: 20px; font-weight: bold;")
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_title.setGeometry(50, 20, 500, 30)
+        self.label_title.setGeometry(50, 30, 500, 30)
+        self.label_title.setFont(QFont(self.font_label, 24))
 
         # container_pdf de entrada de arquivo
         self.container_pdf = QWidget(self)
@@ -46,11 +51,11 @@ class Interface(QWidget):
             QWidget:hover {{
                 background-color: {self.color1_hover};
                 border: 2px solid {self.color2_hover};
-            }}
-            """)
+        }}
+        """)
 
         self.entry_path_pdf = QLineEdit(self.container_pdf)
-        self.entry_path_pdf.setPlaceholderText("Caminho do arquivo PDF")
+        self.entry_path_pdf.setPlaceholderText("Caminho do arquivo do processo")
         self.entry_path_pdf.setGeometry(10, 2, 375, 36)
         self.entry_path_pdf.setReadOnly(True)
         self.entry_path_pdf.setAlignment(Qt.AlignmentFlag.AlignLeft)
