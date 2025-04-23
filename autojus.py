@@ -82,7 +82,7 @@ def main(pdf_path, excel_path, confirm_callback, anima_botao):
     # Regex
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
-    padrao_advogado = r"Advogado: ([^-]+)"
+    padrao_advogado = r"Advogado: ([^-\n]+)"
     padrao_oab = r"OAB[:\s]+(\d+)"
     padrao_data = r"Data de Distribuição: (\d{1,2}/\d{1,2}/\d{2,4})"
 
@@ -105,7 +105,12 @@ def main(pdf_path, excel_path, confirm_callback, anima_botao):
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last") # Operação realizada com sucesso
             anima_botao()
     else:
-        df_final = df_novo
+        confirm_create = confirm_callback("O arquivo Excel não existe. Deseja criar um novo?")
+        if confirm_create:
+            df_final = df_novo
+            anima_botao()
+        else:
+            return
 
     # Salvando no Excel
     df_final.to_excel(excel_path, index=False)
