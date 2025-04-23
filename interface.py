@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdi
 from pathlib import Path
 import sys
 import subprocess as sb
+import os
 from autojus import main
 
 
@@ -22,9 +23,15 @@ class Interface(QWidget):
         self.color_confirm = "#025f17"
 
         # Definindo as fontes
-        self.font_id = QFontDatabase.addApplicationFont("assets/JosefinSans-VariableFont_wght.ttf")
+        if getattr(sys, "frozen", False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(__file__)
+        font1_path = os.path.join(base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
+        font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")    
+        self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
-        self.font_label_id = QFontDatabase.addApplicationFont("assets/WorkSans-MediumItalic.ttf")
+        self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
         self.font_label = QFontDatabase.applicationFontFamilies(self.font_label_id)[0]
 
         # Configuração da janela principal
