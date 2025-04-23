@@ -28,7 +28,7 @@ class Interface(QWidget):
         self.font_label = QFontDatabase.applicationFontFamilies(self.font_label_id)[0]
 
         # Configuração da janela principal
-        self.setWindowTitle("AutomaticJus")
+        self.setWindowTitle("Process Export System")
         self.setWindowIcon(QIcon("assets/autojus_icon.ico"))
         self.setGeometry(100, 100, 600, 400)
         self.setFixedSize(600, 400)
