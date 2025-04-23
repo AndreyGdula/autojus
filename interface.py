@@ -13,6 +13,7 @@ class Interface(QWidget):
         self.flag_export = False # Flag da condição do botão de exportar
 
         # Definindo as cores
+        self.background_color = "#1e1e1e"
         self.color1 = "#2b2b2b"
         self.color2 = "#3b8ed0"
         self.color1_hover = "#4c4c4d"
@@ -31,6 +32,7 @@ class Interface(QWidget):
         self.setWindowIcon(QIcon("assets/autojus_icon.ico"))
         self.setGeometry(100, 100, 600, 400)
         self.setFixedSize(600, 400)
+        self.setStyleSheet(f"background-color: {self.background_color}; color: white")
 
         # Label
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
