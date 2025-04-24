@@ -47,6 +47,7 @@ class Interface(QWidget):
         font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")
         menu_icon_path = os.path.join(base_path, "assets", "menu.svg")
         close_icon_path = os.path.join(base_path, "assets", "close.svg")
+        update_icon_path = os.path.join(base_path, "assets", "update.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -77,7 +78,7 @@ class Interface(QWidget):
 
         # Painel lateral (menu hambúrguer)
         self.menu_frame = QFrame(self)
-        self.menu_frame.setGeometry(-200, 0, 200, 400)  # Inicialmente fora da tela
+        self.menu_frame.setGeometry(-200, 0, 200, 400)
         self.menu_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {self.color1};
@@ -109,8 +110,10 @@ class Interface(QWidget):
         self.menu_label.setStyleSheet("color: white; font-size: 18px; font-weight: bold; border: none;")
         self.menu_label.setFont(QFont(self.font_label, 18))
 
-        self.menu_option1 = QPushButton("Verificar atualização", self.menu_frame)
+        self.menu_option1 = QPushButton(" Verificar atualização", self.menu_frame)
         self.menu_option1.setGeometry(-2, 100, 200, 40)
+        self.menu_option1.setIcon(QIcon(update_icon_path))
+        self.menu_option1.setIconSize(QSize(16, 16))
         self.menu_option1.setStyleSheet(f"""
             QPushButton {{
                 background-color: {self.color1};
@@ -275,12 +278,11 @@ class Interface(QWidget):
             # Mostrar o menu
             self.animate_menu(0)
             self.menu_open = True
-            self.menu_frame.raise_()  # Garantir que o menu fique acima dos outros widgets
+            self.menu_frame.raise_()  # Sobreposição do menu
 
     def animate_menu(self, target_x):
-        """Anima o menu hambúrguer para abrir ou fechar."""
         self.animation = QPropertyAnimation(self.menu_frame, b"geometry")
-        self.animation.setDuration(300)  # Duração da animação em milissegundos
+        self.animation.setDuration(300)  # Duração da animação em ms
         self.animation.setStartValue(self.menu_frame.geometry())
         self.animation.setEndValue(QRect(target_x, 0, 200, 400))
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
