@@ -32,19 +32,21 @@ class Interface(QWidget):
         self.background_color = "#1e1e1e"
         self.color1 = "#2b2b2b"
         self.color2 = "#3b8ed0"
+        self.color3 = "#212121"
         self.color1_hover = "#4c4c4d"
         self.color2_hover = "#285e89"
         self.color_disabled = "#1e4668"
         self.color_confirm = "#025f17"
 
-        # Definindo as fontes
+        # Definindo as fontes e icones
         if getattr(sys, "frozen", False):
             base_path = sys._MEIPASS
         else:
             base_path = os.path.dirname(__file__)
         font1_path = os.path.join(base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
         font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")
-        menu_icon_path = os.path.join(base_path, "assets", "menu.png")   
+        menu_icon_path = os.path.join(base_path, "assets", "menu.svg")
+        close_icon_path = os.path.join(base_path, "assets", "close.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -61,66 +63,82 @@ class Interface(QWidget):
         self.btn_burger_menu.setIconSize(QSize(24, 24))
         self.btn_burger_menu.setIcon(QIcon(menu_icon_path))
         self.btn_burger_menu.setGeometry(10, 10, 40, 40)
-        self.btn_burger_menu.setStyleSheet("border: none; background-color: transparent;")
+        self.btn_burger_menu.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+                border-radius: 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color1_hover};
+            }}
+        """)
         self.btn_burger_menu.clicked.connect(self.toggle_menu)
 
         # Painel lateral (menu hambúrguer)
         self.menu_frame = QFrame(self)
         self.menu_frame.setGeometry(-200, 0, 200, 400)  # Inicialmente fora da tela
-        self.menu_frame.setStyleSheet("""
-            QFrame {
-                background-color: #2b2b2b;
-                border-right: 2px solid #3b8ed0;
-            }
+        self.menu_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {self.color1};
+                border-right: 2px solid {self.color2};
+            }}
         """)
 
         # Adicionar botão de fechar no menu
-        self.btn_close_menu = QPushButton("X", self.menu_frame)
+        self.btn_close_menu = QPushButton(self.menu_frame)
+        self.btn_close_menu.setIconSize(QSize(24, 24))
+        self.btn_close_menu.setIcon(QIcon(close_icon_path))
         self.btn_close_menu.setGeometry(160, 10, 30, 30)
         self.btn_close_menu.setStyleSheet("""
             QPushButton {
-                background-color: #3b8ed0;
+                background-color: transparent;
                 color: white;
                 border-radius: 15px;
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #285e89;
+                background-color: gray;
             }
         """)
         self.btn_close_menu.clicked.connect(self.toggle_menu)
 
         # Adicionar opções ao menu
         self.menu_label = QLabel("Menu", self.menu_frame)
-        self.menu_label.setGeometry(20, 50, 160, 30)
-        self.menu_label.setStyleSheet("color: white; font-size: 18px; font-weight: bold;")
+        self.menu_label.setGeometry(20, 10, 100, 30)
+        self.menu_label.setStyleSheet("color: white; font-size: 18px; font-weight: bold; border: none;")
+        self.menu_label.setFont(QFont(self.font_label, 18))
 
-        self.menu_option1 = QPushButton("Opção 1", self.menu_frame)
-        self.menu_option1.setGeometry(20, 100, 160, 40)
-        self.menu_option1.setStyleSheet("""
-            QPushButton {
-                background-color: #3b8ed0;
+        self.menu_option1 = QPushButton("Verificar atualização", self.menu_frame)
+        self.menu_option1.setGeometry(-2, 100, 200, 40)
+        self.menu_option1.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.color1};
                 color: white;
-                border-radius: 10px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #285e89;
-            }
+                border: 1px solid gray;
+                border-left: none;
+                border-right: none;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color3};
+            }}
         """)
 
         self.menu_option2 = QPushButton("Opção 2", self.menu_frame)
-        self.menu_option2.setGeometry(20, 150, 160, 40)
-        self.menu_option2.setStyleSheet("""
-            QPushButton {
-                background-color: #3b8ed0;
+        self.menu_option2.setGeometry(-2, 139, 200, 40)
+        self.menu_option2.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.color1};
                 color: white;
-                border-radius: 10px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #285e89;
-            }
+                border: 1px solid gray;
+                border-left: none;
+                border-right: none;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color3};
+            }}
         """)
 
         # Variável para rastrear o estado do menu
