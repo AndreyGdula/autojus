@@ -7,6 +7,8 @@ import subprocess as sb
 import os
 from autojus import main
 
+version = "1.0.0"
+
 
 class Interface(QWidget):
     def __init__(self):
