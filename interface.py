@@ -1,19 +1,32 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize
 from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect, QFrame
 from pathlib import Path
 import sys
 import subprocess as sb 
 import os
 from autojus import main
+from scripts.updateChecker import check_for_update
 
-version = "1.0.0"
+app_version = "1.0.0"
 
+# No botão “Verificar Atualização”:
+def verificar_manual():
+    update_available, new_version = check_for_update(app_version, force=True)
+    if update_available:
+        print(f"Nova versão {new_version} disponível!")
+    else:
+        print("Você já está usando a versão mais recente.")
 
 class Interface(QWidget):
     def __init__(self):
         super().__init__()
-        self.flag_export = False # Flag da condição do botão de exportar
+        self.flag_export = False  # Flag da condição do botão de exportar
+
+        # Verifica se há atualizações disponíveis
+        update_available, new_version = check_for_update(app_version)
+        if update_available:
+            print(f"Uma nova versão está disponível: {new_version}")
 
         # Definindo as cores
         self.background_color = "#1e1e1e"
@@ -30,7 +43,8 @@ class Interface(QWidget):
         else:
             base_path = os.path.dirname(__file__)
         font1_path = os.path.join(base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
-        font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")    
+        font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")
+        menu_icon_path = os.path.join(base_path, "assets", "menu.png")   
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -38,10 +52,79 @@ class Interface(QWidget):
 
         # Configuração da janela principal
         self.setWindowTitle("Process Export System")
-        self.setWindowIcon(QIcon("assets/autojus_icon.ico"))
         self.setGeometry(100, 100, 600, 400)
         self.setFixedSize(600, 400)
         self.setStyleSheet(f"background-color: {self.background_color}; color: white")
+
+        # Burger menu
+        self.btn_burger_menu = QPushButton(self)
+        self.btn_burger_menu.setIconSize(QSize(24, 24))
+        self.btn_burger_menu.setIcon(QIcon(menu_icon_path))
+        self.btn_burger_menu.setGeometry(10, 10, 40, 40)
+        self.btn_burger_menu.setStyleSheet("border: none; background-color: transparent;")
+        self.btn_burger_menu.clicked.connect(self.toggle_menu)
+
+        # Painel lateral (menu hambúrguer)
+        self.menu_frame = QFrame(self)
+        self.menu_frame.setGeometry(-200, 0, 200, 400)  # Inicialmente fora da tela
+        self.menu_frame.setStyleSheet("""
+            QFrame {
+                background-color: #2b2b2b;
+                border-right: 2px solid #3b8ed0;
+            }
+        """)
+
+        # Adicionar botão de fechar no menu
+        self.btn_close_menu = QPushButton("X", self.menu_frame)
+        self.btn_close_menu.setGeometry(160, 10, 30, 30)
+        self.btn_close_menu.setStyleSheet("""
+            QPushButton {
+                background-color: #3b8ed0;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #285e89;
+            }
+        """)
+        self.btn_close_menu.clicked.connect(self.toggle_menu)
+
+        # Adicionar opções ao menu
+        self.menu_label = QLabel("Menu", self.menu_frame)
+        self.menu_label.setGeometry(20, 50, 160, 30)
+        self.menu_label.setStyleSheet("color: white; font-size: 18px; font-weight: bold;")
+
+        self.menu_option1 = QPushButton("Opção 1", self.menu_frame)
+        self.menu_option1.setGeometry(20, 100, 160, 40)
+        self.menu_option1.setStyleSheet("""
+            QPushButton {
+                background-color: #3b8ed0;
+                color: white;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #285e89;
+            }
+        """)
+
+        self.menu_option2 = QPushButton("Opção 2", self.menu_frame)
+        self.menu_option2.setGeometry(20, 150, 160, 40)
+        self.menu_option2.setStyleSheet("""
+            QPushButton {
+                background-color: #3b8ed0;
+                color: white;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #285e89;
+            }
+        """)
+
+        # Variável para rastrear o estado do menu
+        self.menu_open = False
 
         # Label
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
@@ -163,6 +246,27 @@ class Interface(QWidget):
             }}
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
+
+    def toggle_menu(self):
+        """Mostra ou oculta o menu hambúrguer."""
+        if self.menu_open:
+            # Ocultar o menu
+            self.animate_menu(-200)
+            self.menu_open = False
+        else:
+            # Mostrar o menu
+            self.animate_menu(0)
+            self.menu_open = True
+            self.menu_frame.raise_()  # Garantir que o menu fique acima dos outros widgets
+
+    def animate_menu(self, target_x):
+        """Anima o menu hambúrguer para abrir ou fechar."""
+        self.animation = QPropertyAnimation(self.menu_frame, b"geometry")
+        self.animation.setDuration(300)  # Duração da animação em milissegundos
+        self.animation.setStartValue(self.menu_frame.geometry())
+        self.animation.setEndValue(QRect(target_x, 0, 200, 400))
+        self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.animation.start()
 
     def selecionar_arquivo_pdf(self):
         if self.flag_export:
