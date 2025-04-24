@@ -3,7 +3,7 @@ from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect
 from pathlib import Path
 import sys
-import subprocess as sb
+import subprocess as sb 
 import os
 from autojus import main
 

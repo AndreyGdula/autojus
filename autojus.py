@@ -2,7 +2,6 @@ import fitz
 import pandas as pd
 import re
 import os
-import sys
 import subprocess as sb
 from openpyxl import load_workbook
 
@@ -115,4 +114,4 @@ def main(pdf_path, excel_path, confirm_callback, anima_botao):
     # Salvando no Excel
     df_final.to_excel(excel_path, index=False)
     move_col(excel_path)
-    sb.run(["python", "format_table.py", excel_path])  # Formatar arquivo Excel
+    sb.run(["python", "format_table.py", excel_path], creationflags=sb.CREATE_NO_WINDOW)  # Formatar arquivo Excel
