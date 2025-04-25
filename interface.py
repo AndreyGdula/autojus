@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize
-from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize, QUrl
+from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont, QDesktopServices
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect, QFrame
 from pathlib import Path
 import sys
@@ -24,10 +24,8 @@ class Interface(QWidget):
         self.flag_export = False  # Flag da condição do botão de exportar
         self.flag_menu = False  # Flag da condição do menu
 
-        # Verifica se há atualizações disponíveis
-        update_available, new_version = check_for_update(app_version)
-        if update_available:
-            print(f"Uma nova versão está disponível: {new_version}")
+        # Verifica se há atualizações disponíveis ao iniciar
+        self.verificar_atualizacao_inicial()
 
         # Definindo as cores
         self.background_color = "#1e1e1e"
@@ -143,6 +141,7 @@ class Interface(QWidget):
                 background-color: {self.color3};
             }}
         """)
+        self.menu_option1.clicked.connect(self.verificar_atualizacao_manual)
 
         self.menu_option2 = QPushButton("Opção 2", self.menu_frame)
         self.menu_option2.setGeometry(-2, 139, 200, 40)
@@ -279,6 +278,39 @@ class Interface(QWidget):
             }}
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
+
+
+    def verificar_atualizacao_inicial(self):
+        """Verifica atualizações automaticamente ao iniciar o programa."""
+        update_available, new_version = check_for_update(app_version)
+        if update_available:
+            resposta = QMessageBox.question(
+                self,
+                "Atualização Disponível",
+                f"Uma nova versão ({new_version}) está disponível. Deseja baixar agora?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if resposta == QMessageBox.StandardButton.Yes:
+                self.baixar_atualizacao()
+
+    def verificar_atualizacao_manual(self):
+        """Verifica atualizações manualmente ao clicar no botão."""
+        update_available, new_version = check_for_update(app_version, force=True)
+        if update_available:
+            resposta = QMessageBox.question(
+                self,
+                "Atualização Disponível",
+                f"Uma nova versão ({new_version}) está disponível. Deseja baixar agora?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if resposta == QMessageBox.StandardButton.Yes:
+                self.baixar_atualizacao()
+        else:
+            QMessageBox.information(self, "Atualização", "Você já está usando a versão mais recente.")
+
+    def baixar_atualizacao(self):
+        update_info_url = "https://drive.google.com/uc?export=download&id=1xqjL0toYQ3E4Fh7FuPnPLVGEp2p2CVMS"  # URL do JSON
+        QDesktopServices.openUrl(QUrl(update_info_url))
 
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
