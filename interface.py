@@ -22,6 +22,7 @@ class Interface(QWidget):
     def __init__(self):
         super().__init__()
         self.flag_export = False  # Flag da condição do botão de exportar
+        self.flag_menu = False  # Flag da condição do menu
 
         # Verifica se há atualizações disponíveis
         update_available, new_version = check_for_update(app_version)
@@ -59,6 +60,22 @@ class Interface(QWidget):
         self.setFixedSize(600, 400)
         self.setStyleSheet(f"background-color: {self.background_color}; color: white")
 
+        # Widget de fundo para o blur
+        self.blur_background = QPushButton(self)
+        self.blur_background.setGeometry(0, 0, 600, 400)
+        self.blur_background.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(0, 0, 0, 0.5);
+                border: none;
+                border-radius: 0px;
+            }
+            QPushButton:hover {
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+        """)
+        self.blur_background.clicked.connect(self.toggle_menu)  # Fechar o menu ao clicar no fundo
+        self.blur_background.hide()
+
         # Burger menu
         self.btn_burger_menu = QPushButton(self)
         self.btn_burger_menu.setIconSize(QSize(24, 24))
@@ -76,7 +93,7 @@ class Interface(QWidget):
         """)
         self.btn_burger_menu.clicked.connect(self.toggle_menu)
 
-        # Painel lateral (menu hambúrguer)
+        # Frame do burger menu
         self.menu_frame = QFrame(self)
         self.menu_frame.setGeometry(-200, 0, 200, 400)
         self.menu_frame.setStyleSheet(f"""
@@ -86,7 +103,6 @@ class Interface(QWidget):
             }}
         """)
 
-        # Adicionar botão de fechar no menu
         self.btn_close_menu = QPushButton(self.menu_frame)
         self.btn_close_menu.setIconSize(QSize(24, 24))
         self.btn_close_menu.setIcon(QIcon(close_icon_path))
@@ -144,10 +160,7 @@ class Interface(QWidget):
             }}
         """)
 
-        # Variável para rastrear o estado do menu
-        self.menu_open = False
-
-        # Label
+        # Tela principal
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
         self.label_title.setStyleSheet("font-size: 20px; font-weight: bold;")
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -202,10 +215,9 @@ class Interface(QWidget):
         """)
         self.btn_path_pdf.clicked.connect(self.selecionar_arquivo_pdf)
 
-
         # container_pdf do excel
         self.container_excel = QWidget(self)
-        self.container_excel.setGeometry(50, 180, 500, 40)
+        self.container_excel.setGeometry(50, 178, 500, 40)
         self.container_excel.setStyleSheet(f"""
             QWidget {{
                 background-color: {self.color1};
@@ -270,17 +282,21 @@ class Interface(QWidget):
 
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
-        if self.menu_open:
-            # Ocultar o menu
+        if self.flag_menu:
+            # Ocultar o menu e o blur
             self.animate_menu(-200)
-            self.menu_open = False
+            self.flag_menu = False
+            self.blur_background.hide()
         else:
-            # Mostrar o menu
+            # Mostrar o menu e o blur
+            self.blur_background.show()
+            self.blur_background.raise_() # Sobreposição do blur na jenala principal
+            self.menu_frame.raise_() # Sobreposição do menu
             self.animate_menu(0)
-            self.menu_open = True
-            self.menu_frame.raise_()  # Sobreposição do menu
+            self.flag_menu = True
 
     def animate_menu(self, target_x):
+        """Anima o menu hambúrguer para abrir ou fechar."""
         self.animation = QPropertyAnimation(self.menu_frame, b"geometry")
         self.animation.setDuration(300)  # Duração da animação em ms
         self.animation.setStartValue(self.menu_frame.geometry())
