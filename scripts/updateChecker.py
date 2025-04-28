@@ -1,59 +1,39 @@
-import json
-import datetime
-import os
 import urllib.request
+import json
+import os
 
-# Caminho dinâmico para os arquivos
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Diretório do script atual
-UPDATE_LOG_FILE = os.path.join(BASE_DIR, "updateLog.json")  # Caminho para updateLog.json
-UPDATE_INFO_URL = "https://drive.google.com/uc?export=download&id=1xqjL0toYQ3E4Fh7FuPnPLVGEp2p2CVMS"
+FILE_ID = "1xqjL0toYQ3E4Fh7FuPnPLVGEp2p2CVMS"
+VERSION_URL = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+DOWNLOAD_ID = "1U-ZyjPfnJPYia64cn4gP9M3F9dHsc-zB"
+DOWNLOAD_URL = f"https://drive.google.com/uc?export=download&id={DOWNLOAD_ID}"
 
-def load_last_check():
-    """Carrega a data da última verificação de atualização."""
+def get_latest_version(url):
+    """Obtem o arquivo JSON com a versão mais recente."""
     try:
-        with open(UPDATE_LOG_FILE, "r") as file:
-            data = json.load(file)
-            return datetime.datetime.strptime(data["last-check"], "%d-%m-%Y").date()
-    except (FileNotFoundError, KeyError, ValueError):
-        return None
-
-def save_last_check(date):
-    """Salva a data da última verificação de atualização no arquivo."""
-    try:
-        with open(UPDATE_LOG_FILE, "w") as file:
-            json.dump({"last-check": date.strftime("%d-%m-%Y")}, file)
+        with urllib.request.urlopen(url) as response:
+            content = response.read().decode("utf-8")
+            data = json.loads(content)
+            version = data.get('version')
+            return version
     except Exception as e:
-        print(f"Erro ao salvar a data da última verificação: {e}")
-
-def should_check_update(days=3):
-    """Verifica se já passou o intervalo necessário para checar atualizações."""
-    last_check = load_last_check()
-    today = datetime.date.today()
-    if not last_check or (today - last_check).days >= days:
-        return True
-    return False
-
-def get_remote_version():
-    """Obtém a versão mais recente do servidor remoto."""
-    try:
-        with urllib.request.urlopen(UPDATE_INFO_URL) as response:
-            data = json.load(response)
-            return data["version"]
-    except Exception as e:
-        print(f"Erro ao verificar atualização: {e}")
+        print(f"Erro ao obter a versão mais recente: {e}")
         return None
+    
 
-def check_for_update(current_version, days=3, force=False):
-    """
-    Verifica se há uma nova versão disponível.
-    :param current_version: Versão atual do aplicativo.
-    :param days: Intervalo de dias para verificar atualizações.
-    :param force: Força a verificação, ignorando o intervalo.
-    :return: (bool, str) - True e a nova versão se houver atualização, False e None caso contrário.
-    """
-    if force or should_check_update(days):
-        remote_version = get_remote_version()
-        save_last_check(datetime.date.today())
-        if remote_version and remote_version != current_version:
-            return True, remote_version
-    return False, None
+def check_for_update(current_version):
+    """Verifica se há uma versão mais recente disponível."""
+    latest_version = get_latest_version(VERSION_URL)
+    if latest_version == current_version:
+        return 0
+    else:
+        return latest_version
+    
+def download_update():
+    """Baixa a versão mais recente"""
+    current_exe = os.path.abspath(__file__) # Caminho do arquivo atual
+    new_exe = current_exe + ".new"
+    
+    urllib.request.urlretrieve(DOWNLOAD_URL, new_exe)
+    os.remove(current_exe)
+    os.rename(new_exe, current_exe)
+    return True

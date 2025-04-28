@@ -6,26 +6,15 @@ import sys
 import subprocess as sb 
 import os
 from autojus import main
-from scripts.updateChecker import check_for_update
+from scripts.updateChecker import check_for_update, download_update
 
 app_version = "1.0.0"
-
-# No botão “Verificar Atualização”:
-def verificar_manual():
-    update_available, new_version = check_for_update(app_version, force=True)
-    if update_available:
-        print(f"Nova versão {new_version} disponível!")
-    else:
-        print("Você já está usando a versão mais recente.")
 
 class Interface(QWidget):
     def __init__(self):
         super().__init__()
         self.flag_export = False  # Flag da condição do botão de exportar
         self.flag_menu = False  # Flag da condição do menu
-
-        # Verifica se há atualizações disponíveis ao iniciar
-        self.verificar_atualizacao_inicial()
 
         # Definindo as cores
         self.background_color = "#1e1e1e"
@@ -118,7 +107,7 @@ class Interface(QWidget):
         """)
         self.btn_close_menu.clicked.connect(self.toggle_menu)
 
-        # Adicionar opções ao menu
+        # Adicionando opções ao menu
         self.menu_label = QLabel("Menu", self.menu_frame)
         self.menu_label.setGeometry(20, 10, 100, 30)
         self.menu_label.setStyleSheet("color: white; font-size: 18px; font-weight: bold; border: none;")
@@ -136,12 +125,14 @@ class Interface(QWidget):
                 border: 1px solid gray;
                 border-left: none;
                 border-right: none;
+                text-align: left;
+                padding-left: 10px;
             }}
             QPushButton:hover {{
                 background-color: {self.color3};
             }}
         """)
-        self.menu_option1.clicked.connect(self.verificar_atualizacao_manual)
+        self.menu_option1.clicked.connect(lambda: self.verificar_updade())
 
         self.menu_option2 = QPushButton("Opção 2", self.menu_frame)
         self.menu_option2.setGeometry(-2, 139, 200, 40)
@@ -153,6 +144,8 @@ class Interface(QWidget):
                 border: 1px solid gray;
                 border-left: none;
                 border-right: none;
+                text-align: left;
+                padding-left: 10px;
             }}
             QPushButton:hover {{
                 background-color: {self.color3};
@@ -278,39 +271,6 @@ class Interface(QWidget):
             }}
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
-
-
-    def verificar_atualizacao_inicial(self):
-        """Verifica atualizações automaticamente ao iniciar o programa."""
-        update_available, new_version = check_for_update(app_version)
-        if update_available:
-            resposta = QMessageBox.question(
-                self,
-                "Atualização Disponível",
-                f"Uma nova versão ({new_version}) está disponível. Deseja baixar agora?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if resposta == QMessageBox.StandardButton.Yes:
-                self.baixar_atualizacao()
-
-    def verificar_atualizacao_manual(self):
-        """Verifica atualizações manualmente ao clicar no botão."""
-        update_available, new_version = check_for_update(app_version, force=True)
-        if update_available:
-            resposta = QMessageBox.question(
-                self,
-                "Atualização Disponível",
-                f"Uma nova versão ({new_version}) está disponível. Deseja baixar agora?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if resposta == QMessageBox.StandardButton.Yes:
-                self.baixar_atualizacao()
-        else:
-            QMessageBox.information(self, "Atualização", "Você já está usando a versão mais recente.")
-
-    def baixar_atualizacao(self):
-        update_info_url = "https://drive.google.com/uc?export=download&id=1xqjL0toYQ3E4Fh7FuPnPLVGEp2p2CVMS"  # URL do JSON
-        QDesktopServices.openUrl(QUrl(update_info_url))
 
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
@@ -482,6 +442,18 @@ class Interface(QWidget):
 
     def confirm(self, msg):
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
+    
+    def verificar_updade(self):
+        if check_for_update(app_version) == 0:
+            QMessageBox.information(self, "Atualização", "Você já está na versão mais recente.")
+        else:
+            if self.confirm(f"A versão {check_for_update(app_version)} já está disponível, Deseja atualizar?"):
+                try:
+                    download_update()
+                except Exception as e:
+                    QMessageBox.critical(self, "Erro", f"Erro ao baixar a atualização: {e}")
+            else:
+                return
 
 
 if __name__ == "__main__":
