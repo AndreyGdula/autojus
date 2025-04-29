@@ -8,6 +8,7 @@ from openpyxl import load_workbook
 
 # Função para extrair texto do PDF
 def extrair_texto_pdf(pdf_path):
+    """Extrai texto de um arquivo PDF."""
     texto = ""
     with fitz.open(pdf_path) as doc:
         for page in doc:
@@ -15,6 +16,7 @@ def extrair_texto_pdf(pdf_path):
     return texto
 
 def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advogado, padrao_oab, padrao_data, confirm_callback=None):
+    """Extrai dados de processos a partir de um arquivo de texto."""
     texto_extraido = extrair_texto_pdf(pdf_path)
 
     # Encontrando todas as ocorrências
@@ -64,6 +66,7 @@ def extrair_dados_processos(pdf_path, padrao_processo, padrao_autor, padrao_advo
 
 # Garantir que a coluna Arquivo fique na coluna A
 def move_col(excel_path):
+    """Move a coluna 'Arquivos' para a coluna A no Excel."""
     wb = load_workbook(excel_path)
     ws = wb.active
 

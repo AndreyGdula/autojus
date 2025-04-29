@@ -297,6 +297,7 @@ class Interface(QWidget):
         self.animation.start()
 
     def selecionar_arquivo_pdf(self):
+        """Seleciona o arquivo do processo de entrada."""
         if self.flag_export:
             self.resetar_botao()
 
@@ -329,6 +330,7 @@ class Interface(QWidget):
             return
 
     def selecionar_arquivo_excel(self):
+        """Selecionar o arquivo excel para exportação."""
         if self.flag_export:
             self.resetar_botao()
 
@@ -345,6 +347,7 @@ class Interface(QWidget):
             return
 
     def exportar(self, pdf_path, excel_path):
+        """Exporta os dados do processo para o Excel."""
         if self.flag_export:
             self.resetar_botao()
 
@@ -362,6 +365,7 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro Inesperado", f"{e}")
 
     def animar_botao(self):
+        """Anima o botão de exportação após a conclusão."""
         self.flag_export = True
         effect = QGraphicsColorizeEffect(self.btn_exportar)
         self.btn_exportar.setGraphicsEffect(effect)
@@ -385,6 +389,7 @@ class Interface(QWidget):
         self.animar_texto("EXPORTADO COM SUCESSO")
 
     def resetar_botao(self):
+        """Volta ao style original do botão."""
         self.flag_export = False
 
         self.btn_exportar.setGraphicsEffect(None)
@@ -424,6 +429,7 @@ class Interface(QWidget):
         self.animar_texto("Exportar", 50)
 
     def animar_texto(self, texto_final, time=25):
+        """Animar o texto do botão de exportação."""
         self.texto_atual = ""
         self.indice_texto = 0
 
@@ -441,9 +447,11 @@ class Interface(QWidget):
 
 
     def confirm(self, msg):
+        """Exibir uma caixa de diálogo de confirmação."""
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
     
     def verificar_updade(self):
+        """Verifica se há atualizações disponíveis."""
         if check_for_update(app_version) == 0:
             QMessageBox.information(self, "Atualização", "Você já está na versão mais recente.")
         else:
