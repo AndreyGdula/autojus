@@ -8,7 +8,7 @@ import os
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 
-app_version = "1.0.0"
+app_version = "1.0.1"
 
 class Interface(QWidget):
     def __init__(self):
@@ -151,6 +151,10 @@ class Interface(QWidget):
                 background-color: {self.color3};
             }}
         """)
+
+        self.label_version = QLabel(f"v{app_version}", self.menu_frame)
+        self.label_version.setGeometry(15, 365, 50, 30)
+        self.label_version.setStyleSheet("color: gray; font-size: 12px; font-weight: bold; border: none;")
 
         # Tela principal
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
@@ -458,6 +462,7 @@ class Interface(QWidget):
             if self.confirm(f"A versão {check_for_update(app_version)} já está disponível, Deseja atualizar?"):
                 try:
                     download_update()
+                    QApplication.quit()
                 except Exception as e:
                     QMessageBox.critical(self, "Erro", f"Erro ao baixar a atualização: {e}")
             else:
