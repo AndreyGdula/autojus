@@ -41,8 +41,6 @@ def download_update():
         # Define o caminho para salvar o instalador
         installer_path = downloads_folder / "AutoJus_Setup.exe"
 
-        print(f"Baixando o instalador para: {installer_path}")
-
         # Faz o download do instalador
         response = requests.get(DOWNLOAD_URL, stream=True)
         response.raise_for_status()  # Lança uma exceção se o download falhar
