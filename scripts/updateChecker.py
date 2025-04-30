@@ -5,6 +5,7 @@ import requests
 import sys
 import shutil
 import time
+from pathlib import Path
 
 VERSION_URL = "https://raw.githubusercontent.com/AndreyGdula/autojus/v1.0.1/scripts/update.json"
 DOWNLOAD_URL = "https://github.com/AndreyGdula/autojus/releases/download/v1.0.1/AutoJus_setup.exe"
@@ -31,29 +32,27 @@ def check_for_update(current_version):
         return latest_version
     
 def download_update():
-    """Baixa a versão mais recente"""
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    current_exe = os.path.join(current_dir, "AutoJus.exe")
-    new_exe = "AutoJus-Update.exe"
+    """Baixa o instalador mais recente para a pasta Downloads do usuário."""
+    try:
+        # Obtém o caminho da pasta Downloads do usuário
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)  # Garante que a pasta existe
 
-    while os.path.exists(current_exe):
-        try:
-            os.rename(current_exe, current_exe)  # Tenta renomear — falha se estiver rodando
-            break
-        except PermissionError:
-            time.sleep(1)
+        # Define o caminho para salvar o instalador
+        installer_path = downloads_folder / "AutoJus_Setup.exe"
 
-    # Baixa a nova versão
-    res = requests.get(DOWNLOAD_URL)
-    if res.status_code == 200:
-        with open(new_exe, 'wb') as f:
-            f.write(res.content)
-    else:
-        sys.exit(1)
+        print(f"Baixando o instalador para: {installer_path}")
 
-    # Substitui o executável antigo
-    if os.path.exists(current_exe):
-        os.remove(current_exe)
-    shutil.move(new_exe, current_exe)
-    os.startfile(current_exe)
-    return True
+        # Faz o download do instalador
+        response = requests.get(DOWNLOAD_URL, stream=True)
+        response.raise_for_status()  # Lança uma exceção se o download falhar
+
+        # Salva o arquivo na pasta Downloads
+        with open(installer_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+
+        os.startfile(installer_path)  # Abre o instalador automaticamente
+        return True
+    except Exception as e:
+        return False
