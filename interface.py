@@ -8,7 +8,7 @@ import os
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 
-app_version = "1.0.1"
+app_version = "1.0.2"
 
 class Interface(QWidget):
     def __init__(self):
@@ -36,6 +36,7 @@ class Interface(QWidget):
         menu_icon_path = os.path.join(base_path, "assets", "menu.svg")
         close_icon_path = os.path.join(base_path, "assets", "close.svg")
         update_icon_path = os.path.join(base_path, "assets", "update.svg")
+        historical_icon_path = os.path.join(base_path, "assets", "historical.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -134,8 +135,10 @@ class Interface(QWidget):
         """)
         self.menu_option1.clicked.connect(lambda: self.verificar_updade())
 
-        self.menu_option2 = QPushButton("Opção 2", self.menu_frame)
+        self.menu_option2 = QPushButton(" Histórico", self.menu_frame)
         self.menu_option2.setGeometry(-2, 139, 200, 40)
+        self.menu_option2.setIcon(QIcon(historical_icon_path))
+        self.menu_option2.setIconSize(QSize(16, 16))
         self.menu_option2.setStyleSheet(f"""
             QPushButton {{
                 background-color: {self.color1};
@@ -151,6 +154,7 @@ class Interface(QWidget):
                 background-color: {self.color3};
             }}
         """)
+        self.menu_option2.clicked.connect(lambda: self.open_historical())
 
         self.label_version = QLabel(f"v{app_version}", self.menu_frame)
         self.label_version.setGeometry(15, 365, 50, 30)
@@ -468,6 +472,8 @@ class Interface(QWidget):
             else:
                 return
 
+    def open_historical(self):
+        QMessageBox.information(self, "Histórico", "Recurso em desenvolvimento.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

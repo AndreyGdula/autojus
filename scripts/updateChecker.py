@@ -6,9 +6,8 @@ import sys
 import shutil
 import time
 
-FILE_ID = "1xqjL0toYQ3E4Fh7FuPnPLVGEp2p2CVMS"
-VERSION_URL = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
-DOWNLOAD_URL = "https://github.com/AndreyGdula/autojus/releases/download/v1.0.1/AutoJus.exe"
+VERSION_URL = "https://raw.githubusercontent.com/AndreyGdula/autojus/v1.0.1/scripts/update.json"
+DOWNLOAD_URL = "https://github.com/AndreyGdula/autojus/releases/download/v1.0.1/AutoJus_setup.exe"
 
 def get_latest_version(url):
     """Obtem o arquivo JSON com a versão mais recente."""
