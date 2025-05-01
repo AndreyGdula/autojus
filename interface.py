@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize, QUrl
-from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont, QDesktopServices
+from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect, QFrame
 from pathlib import Path
 import sys
