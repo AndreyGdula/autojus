@@ -5,10 +5,12 @@ from pathlib import Path
 import sys
 import subprocess as sb 
 import os
+import json
+from datetime import datetime
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 
-app_version = "1.0.2"
+app_version = "1.0.1"
 
 class Interface(QWidget):
     def __init__(self):
@@ -16,7 +18,7 @@ class Interface(QWidget):
         self.flag_export = False  # Flag da condição do botão de exportar
         self.flag_menu = False  # Flag da condição do menu
 
-        # Definindo as cores
+        # Definindo as cores e constantes
         self.background_color = "#1e1e1e"
         self.color1 = "#2b2b2b"
         self.color2 = "#3b8ed0"
@@ -25,18 +27,20 @@ class Interface(QWidget):
         self.color2_hover = "#285e89"
         self.color_disabled = "#1e4668"
         self.color_confirm = "#025f17"
+        self.window_width = 600
+        self.window_height = 400
 
         # Definindo as fontes e icones
         if getattr(sys, "frozen", False):
-            base_path = sys._MEIPASS
+            self.base_path = sys._MEIPASS
         else:
-            base_path = os.path.dirname(__file__)
-        font1_path = os.path.join(base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
-        font2_path = os.path.join(base_path, "assets", "WorkSans-MediumItalic.ttf")
-        menu_icon_path = os.path.join(base_path, "assets", "menu.svg")
-        close_icon_path = os.path.join(base_path, "assets", "close.svg")
-        update_icon_path = os.path.join(base_path, "assets", "update.svg")
-        historical_icon_path = os.path.join(base_path, "assets", "historical.svg")
+            self.base_path = os.path.dirname(__file__)
+        font1_path = os.path.join(self.base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
+        font2_path = os.path.join(self.base_path, "assets", "WorkSans-MediumItalic.ttf")
+        menu_icon_path = os.path.join(self.base_path, "assets", "menu.svg")
+        close_icon_path = os.path.join(self.base_path, "assets", "close.svg")
+        update_icon_path = os.path.join(self.base_path, "assets", "update.svg")
+        historical_icon_path = os.path.join(self.base_path, "assets", "historical.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -44,13 +48,13 @@ class Interface(QWidget):
 
         # Configuração da janela principal
         self.setWindowTitle("Process Export System")
-        self.setGeometry(100, 100, 600, 400)
-        self.setFixedSize(600, 400)
+        self.setGeometry(100, 100, self.window_width, self.window_height)
+        self.setFixedSize(self.window_width, self.window_height)
         self.setStyleSheet(f"background-color: {self.background_color}; color: white")
 
         # Widget de fundo para o blur
         self.blur_background = QPushButton(self)
-        self.blur_background.setGeometry(0, 0, 600, 400)
+        self.blur_background.setGeometry(0, 0, self.window_width, self.window_height)
         self.blur_background.setStyleSheet("""
             QPushButton {
                 background-color: rgba(0, 0, 0, 0.5);
@@ -68,7 +72,7 @@ class Interface(QWidget):
         self.btn_burger_menu = QPushButton(self)
         self.btn_burger_menu.setIconSize(QSize(24, 24))
         self.btn_burger_menu.setIcon(QIcon(menu_icon_path))
-        self.btn_burger_menu.setGeometry(10, 10, 40, 40)
+        self.btn_burger_menu.setGeometry(10, 25, 40, 40)
         self.btn_burger_menu.setStyleSheet(f"""
             QPushButton {{
                 background-color: transparent;
@@ -83,7 +87,7 @@ class Interface(QWidget):
 
         # Frame do burger menu
         self.menu_frame = QFrame(self)
-        self.menu_frame.setGeometry(-200, 0, 200, 400)
+        self.menu_frame.setGeometry(-200, 0, 200, self.window_height)
         self.menu_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {self.color1};
@@ -280,6 +284,55 @@ class Interface(QWidget):
         """)
         self.btn_exportar.clicked.connect(lambda: self.exportar(self.entry_path_pdf.text(), self.entry_excel.text()))
 
+        # Frame de aviso de atualização
+        self.warning_frame = QFrame(self)
+        self.warning_frame.setGeometry(0, 0, self.window_width, 30)
+        self.warning_frame.setStyleSheet(f"""
+            background-color: {self.color1};
+            color: white;
+            font-size: 13px;
+            font-family: {self.font_family};
+        """)
+        self.warning_frame.hide()
+
+        self.warning_label = QLabel(f"A versão {self.ultima_verificacao()} já está disponível.", self.warning_frame)
+        self.warning_label.setGeometry(30, 0, 200, 30)
+
+        self.download_btn = QPushButton("Baixar", self.warning_frame)
+        self.download_btn.setGeometry(220, 0, 50, 30)
+        self.download_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.color1};
+                color: {self.color2};
+                font-weight: bold;
+                font-family: {self.font_family};
+                border: none;
+                text-decoration: underline;
+            }}
+            QPushButton:hover {{
+                color: {self.color2_hover};
+            }}
+        """)
+        self.download_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.download_btn.clicked.connect(lambda: download_update())
+
+        self.close_warning_frame = QPushButton(self.warning_frame)
+        self.close_warning_frame.setIconSize(QSize(16, 16))
+        self.close_warning_frame.setIcon(QIcon(close_icon_path))
+        self.close_warning_frame.setGeometry(self.window_width-30, 0, 30, 30)
+        self.close_warning_frame.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: gray;
+            }}
+        """)
+        self.close_warning_frame.clicked.connect(lambda: self.warning_frame.hide())
+
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
         if self.flag_menu:
@@ -300,7 +353,7 @@ class Interface(QWidget):
         self.animation = QPropertyAnimation(self.menu_frame, b"geometry")
         self.animation.setDuration(300)  # Duração da animação em ms
         self.animation.setStartValue(self.menu_frame.geometry())
-        self.animation.setEndValue(QRect(target_x, 0, 200, 400))
+        self.animation.setEndValue(QRect(target_x, 0, 200, self.window_height))
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.animation.start()
 
@@ -471,6 +524,27 @@ class Interface(QWidget):
                     QMessageBox.critical(self, "Erro", f"Erro ao baixar a atualização: {e}")
             else:
                 return
+    
+    def ultima_verificacao(self):
+        """Retorna quando foi a última verificação automática de atualização."""
+        UPDATE_LOG_PATH = Path(__file__).parent / "scripts" / "updateLog.json"
+        intervalo_dias = 1
+        try:
+            with open(UPDATE_LOG_PATH, "r") as file:
+                data = json.load(file)
+                last_check = datetime.strptime(data["last-check"], "%d-%m-%Y").date()
+                today = datetime.today().date()
+                if not last_check or (today - last_check).days >= intervalo_dias:
+                    if check_for_update(app_version) == 0: # 0 == Atualizado
+                        return 0
+                    else:
+                        self.warning_frame.show()
+                        return check_for_update(app_version)[0]
+                else:
+                    return 0
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao ler o arquivo de log: {e}")
+            return 0
 
     def open_historical(self):
         QMessageBox.information(self, "Histórico", "Recurso em desenvolvimento.")
