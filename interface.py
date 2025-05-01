@@ -10,7 +10,7 @@ from datetime import datetime
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 
-app_version = "1.0.1"
+app_version = "1.0.2"
 
 class Interface(QWidget):
     def __init__(self):
