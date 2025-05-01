@@ -12,12 +12,13 @@ if getattr(sys, 'frozen', False):
 else:
     base_path = os.path.dirname(__file__)
 
-dotenv_path = os.path.join(base_path, "scripts", ".env")
-load_dotenv(dotenv_path)
-
 VERSION_URL = "https://api.github.com/repos/AndreyGdula/autojus/releases/latest"
 UPDATE_LOG = Path(__file__).parent / "updateLog.json"
-TOKEN = os.getenv("GITHUB_TOKEN")
+TOKEN = os.getenv("AUTOJUS_KEY")
+if not TOKEN:
+    dotenv_path = os.path.join(base_path, ".env")
+    load_dotenv(dotenv_path)
+    TOKEN = os.getenv("GITHUB_TOKEN")
 
 headers = {
     "Authorization": f"token {TOKEN}",
