@@ -2,24 +2,22 @@ import urllib.request
 import json
 import os
 import requests
-import sys
-import shutil
-import time
 from pathlib import Path
 
-VERSION_URL = "https://raw.githubusercontent.com/AndreyGdula/autojus/v1.0.1/scripts/update.json"
-DOWNLOAD_URL = "https://github.com/AndreyGdula/autojus/releases/download/v1.0.1/AutoJus_setup.exe"
+VERSION_URL = "https://api.github.com/repos/AndreyGdula/autojus/releases/latest"
 
 def get_latest_version(url):
     """Obtem o arquivo JSON com a versão mais recente."""
+    global download_url
     try:
         with urllib.request.urlopen(url) as response:
             content = response.read().decode("utf-8")
             data = json.loads(content)
-            version = data.get('version')
-            return version
+            version = data.get('name')
+            version = version.replace("v", "")
+            download_url = data.get('assets')[0].get('browser_download_url')
+            return version, download_url
     except Exception as e:
-        print(f"Erro ao obter a versão mais recente: {e}")
         return None
     
 
@@ -42,7 +40,7 @@ def download_update():
         installer_path = downloads_folder / "AutoJus_Setup.exe"
 
         # Faz o download do instalador
-        response = requests.get(DOWNLOAD_URL, stream=True)
+        response = requests.get(download_url, stream=True)
         response.raise_for_status()  # Lança uma exceção se o download falhar
 
         # Salva o arquivo na pasta Downloads

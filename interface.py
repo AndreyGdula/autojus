@@ -463,7 +463,7 @@ class Interface(QWidget):
         if check_for_update(app_version) == 0:
             QMessageBox.information(self, "Atualização", "Você já está na versão mais recente.")
         else:
-            if self.confirm(f"A versão {check_for_update(app_version)} já está disponível, Deseja atualizar?"):
+            if self.confirm(f"A versão {check_for_update(app_version)[0]} já está disponível, Deseja atualizar?"):
                 try:
                     download_update()
                     QApplication.quit()

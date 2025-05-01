@@ -1,6 +1,0 @@
-{
-    "version": "1.0.2",
-    "url_download": "https://raw.githubusercontent.com/AndreyGdula/autojus/v1.0.1/scripts/update.json", 
-    "changelog": "Correção de bugs e melhorias de desempenho.",
-    "mandatory_update": false
-}
