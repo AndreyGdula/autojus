@@ -359,6 +359,7 @@ class Interface(QWidget):
         """)
         self.close_warning_frame.clicked.connect(lambda: self.warning_frame.hide())
 
+
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
         if self.flag_menu:
@@ -374,6 +375,7 @@ class Interface(QWidget):
             self.animate_menu(0)
             self.flag_menu = True
 
+
     def animate_menu(self, target_x):
         """Anima o menu hambúrguer para abrir ou fechar."""
         self.animation = QPropertyAnimation(self.menu_frame, b"geometry")
@@ -382,6 +384,7 @@ class Interface(QWidget):
         self.animation.setEndValue(QRect(target_x, 0, 200, self.window_height))
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.animation.start()
+
 
     def selecionar_arquivo_pdf(self):
         """Seleciona o arquivo do processo de entrada."""
@@ -416,6 +419,7 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro", "Arquivo inválido. Por favor, insira um arquivo PDF ou Word.")
             return
 
+
     def selecionar_arquivo_excel(self):
         """Selecionar o arquivo excel para exportação."""
         if self.flag_export:
@@ -432,6 +436,7 @@ class Interface(QWidget):
         if not excel_path.lower().endswith(".xlsx"):
             QMessageBox.critical(self, "Erro", "Arquivo inválido. Por favor, insira um arquivo Excel.")
             return
+
 
     def exportar(self, pdf_path, excel_path):
         """Exporta os dados do processo para o Excel."""
@@ -450,6 +455,7 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
         except Exception as e:
             QMessageBox.critical(self, "Erro Inesperado", f"{e}")
+
 
     def animar_botao(self):
         """Anima o botão de exportação após a conclusão."""
@@ -474,6 +480,7 @@ class Interface(QWidget):
             font-size: 16px;
         """))
         self.animar_texto("EXPORTADO COM SUCESSO")
+
 
     def resetar_botao(self):
         """Volta ao style original do botão."""
@@ -515,6 +522,7 @@ class Interface(QWidget):
         """))
         self.animar_texto("Exportar", 50)
 
+
     def animar_texto(self, texto_final, time=25):
         """Animar o texto do botão de exportação."""
         self.texto_atual = ""
@@ -537,6 +545,7 @@ class Interface(QWidget):
         """Exibir uma caixa de diálogo de confirmação."""
         return QMessageBox.question(self, "Confirmação", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
     
+
     def verificar_updade(self):
         """Verifica se há atualizações disponíveis."""
         if check_for_update(app_version) == 0:
@@ -551,6 +560,7 @@ class Interface(QWidget):
             else:
                 return
     
+
     def ultima_verificacao(self):
         """Retorna quando foi a última verificação automática de atualização."""
         UPDATE_LOG_PATH = Path(__file__).parent / "scripts" / "updateLog.json"
@@ -572,14 +582,17 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro", f"Erro ao ler o arquivo de log: {e}")
             return 0
 
+
     def open_historical(self):
         """Exibir o histórico de arquivos exportados"""
         QMessageBox.information(self, "Histórico", "Recurso em desenvolvimento.")
 
+
     def login(self):
         """Exibir a tela de login do usuário."""
         self.toggle_menu() # Fechar o menu
-        QTimer.singleShot(300, self.show_login_window) # Esperar 300ms para abrir a tela de login
+        QTimer.singleShot(200, self.show_login_window) # Esperar 300ms para abrir a tela de login
+
 
     def show_login_window(self):
         """Exibir a janela de login."""
@@ -594,7 +607,7 @@ class Interface(QWidget):
 
         self.login_label = QLabel("LOGIN", self.login_window)
         self.login_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.login_label.setGeometry(50, 30, 500, 30)
+        self.login_label.setGeometry(50, 32, 500, 30)
         self.login_label.setStyleSheet(f"""font-size: 20px; font-weight: bold;""")
         self.login_label.setFont(QFont(self.font_label, 24))
         self.login_label.show()
@@ -695,7 +708,7 @@ class Interface(QWidget):
         self.close_login = QPushButton(self.login_window)
         self.close_login.setIconSize(QSize(24, 24))
         self.close_login.setIcon(QIcon(self.close_icon_path))
-        self.close_login.setGeometry(self.window_width-50, 25, 30, 30)
+        self.close_login.setGeometry(self.window_width-50, 30, 30, 30)
         self.close_login.setStyleSheet(f"""
             QPushButton {{
                 background-color: transparent;
@@ -727,8 +740,41 @@ class Interface(QWidget):
         self.btn_burger_menu_login.show()
         self.btn_burger_menu_login.clicked.connect(self.toggle_menu)
 
+        self.warning_login = QLabel("", self.login_window)
+        self.warning_login.setGeometry(100, 224, 400, 30)
+        self.warning_login.setFont(QFont(self.font_label, 8))
+        self.warning_login.setStyleSheet("color: red")
+        self.warning_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.warning_login.hide()
+
+
     def verificar_campos_login(self):
         """Habilita o botão de login se os campos de usuário e senha estiverem preenchidos."""
+        self.entry_username.setStyleSheet(f"""
+            border-radius: 20px;
+            border: 2px solid {self.color2};
+            background-color: {self.color1};
+        """)
+        self.entry_password.setStyleSheet(f"""
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border: none;
+            background-color: transparent;
+            color: white;
+        """)
+        self.view_password.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 20px;
+                font-weight: bold;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
         if self.entry_username.text() and self.entry_password.text():
             self.btn_login.setEnabled(True)
             self.btn_login.setStyleSheet(f"""
@@ -760,6 +806,7 @@ class Interface(QWidget):
                 }}
             """)
 
+
     def autenticar(self):
         """Autentica o usuário."""
         username = self.entry_username.text()
@@ -769,15 +816,97 @@ class Interface(QWidget):
             QMessageBox.critical(self, "Erro", "Preencha todos os campos.")
             return
 
-        if auth(username, password) is True:
+        if auth(username, password) is True: # Sucesso no login
             QMessageBox.information(self, "Sucesso", "Login realizado com sucesso.")
             self.login_window.hide()
             self.menu_option3.setText(" Logout")
             self.menu_option3.setIcon(QIcon(self.logout_icon_path))
-        elif auth(username, password) is False:
-            QMessageBox.critical(self, "Falha no login", "Usuário inativo.")
-        else:
-            QMessageBox.critical(self, "Falha no login", "Usuário ou senha incorretos.")
+
+        elif auth(username, password) is False: # Usuário inativo
+            self.entry_username.setStyleSheet(f"""
+                QLineEdit {{
+                    border-radius: 20px;
+                    border: 2px solid red;
+                    background-color: {self.color1};
+                }}
+                QLineEdit:hover {{
+                    background-color: {self.color1_hover};
+                    border: 2px solid red;
+                }}
+            """)
+            self.entry_password.setStyleSheet(f"""
+                QLineEdit {{
+                    border-radius: 20px;
+                    border: 2px solid red;
+                    background-color: {self.color1};
+                }}
+                QLineEdit:hover {{
+                    background-color: {self.color1_hover};
+                    border: 2px solid red;
+                }}
+            """)
+            self.view_password.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    border-radius: 20px;
+                    border: none;
+                }}
+                QPushButton:hover {{
+                    background-color: gray;
+                }}
+            """)
+            self.btn_login.setStyleSheet(f"""
+                QPushButton {{
+                    padding: 10px;
+                    border-radius: 20px;
+                    border: 2px solid {self.color_disabled};
+                    background-color: {self.color_disabled};
+                    color: gray;
+                    font-weight: bold;
+                    font-family: {self.font_family};
+                }}
+            """)
+            self.btn_login.setEnabled(False)
+            self.warning_login.setText("Seu usuário está inativo.")
+            self.warning_login.show()
+
+        else: # Credencias incorretas
+            self.entry_password.clear()
+            self.entry_username.setStyleSheet(f"""
+                QLineEdit {{
+                    border-radius: 20px;
+                    border: 2px solid red;
+                    background-color: {self.color1};
+                }}
+                QLineEdit:hover {{
+                    background-color: {self.color1_hover};
+                    border: 2px solid red;
+                }}
+            """)
+            self.entry_password.setStyleSheet(f"""
+                QLineEdit {{
+                    border-radius: 20px;
+                    border: 2px solid red;
+                    background-color: {self.color1};
+                }}
+                QLineEdit:hover {{
+                    background-color: {self.color1_hover};
+                    border: 2px solid red;
+                }}
+            """)
+            self.view_password.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    border-radius: 20px;
+                    border: none;
+                }}
+                QPushButton:hover {{
+                    background-color: gray;
+                }}
+            """)
+            self.warning_login.setText("Usuário ou senha incorretos.")
+            self.warning_login.show()
+
 
     def show_password(self):
         """Exibe ou oculta a senha."""

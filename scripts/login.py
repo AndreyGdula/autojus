@@ -42,7 +42,7 @@ def auth(username, password, usuarios=load_users()):
     Returns:
         bool: True -> se o usuário estiver ativo e as credenciais estiverem corretas
         bool: False -> se não estiver ativo
-        None: se o usuário não existir
+        None: se o usuário não existir ou as credenciais estiverem incorretas
     """
     for users in usuarios:
         if users['username'] == username and users['password'] == password:
