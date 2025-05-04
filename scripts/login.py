@@ -4,6 +4,7 @@ import json
 import os
 
 def load_users():
+    """Carrega os usuários do arquivo JSON hospedado no GitHub."""
     url = "https://api.github.com/repos/AndreyGdula/autojus-users/contents/users.json"
     headers = {
         "Authorization": f"token {os.getenv('AUTOJUS_KEY')}",
@@ -22,7 +23,7 @@ def load_users():
         # Decodifica o conteúdo Base64 do arquivo
         decoded_content = base64.b64decode(file_data['content']).decode('utf-8')
         user_data = json.loads(decoded_content)
-        return user_data
+        return user_data['users']
 
     except json.JSONDecodeError as e:
         print(f"Erro ao decodificar JSON: {e}")
@@ -31,17 +32,22 @@ def load_users():
         print(f"Error loading users: {e}")
         return None
     
-def auth(username, password, usuarios):
+def auth(username, password, usuarios=load_users()):
+    """Verifica o login do usuário e confirma se está ativo
+    
+    Args: 
+        username (str): Nome de usuário
+        password (str): Senha do usuário
+        usuarios (list): Lista de usuários carregados do arquivo JSON
+    Returns:
+        bool: True -> se o usuário estiver ativo e as credenciais estiverem corretas
+        bool: False -> se não estiver ativo
+        None: se o usuário não existir
+    """
     for users in usuarios:
         if users['username'] == username and users['password'] == password:
             if users.get('active', False):
-                print("Login successful")
-                return users
+                return True
             else:
-                print("User is inactive")
-                return None
-    print("Invalid username or password")
+                return False
     return None
-
-
-print(auth("testuser", "testpass", load_users()))

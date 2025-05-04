@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
+from scripts.login import auth
 
 app_version = "1.0.2"
 
@@ -37,10 +38,14 @@ class Interface(QWidget):
             self.base_path = os.path.dirname(__file__)
         font1_path = os.path.join(self.base_path, "assets", "JosefinSans-VariableFont_wght.ttf")
         font2_path = os.path.join(self.base_path, "assets", "WorkSans-MediumItalic.ttf")
-        menu_icon_path = os.path.join(self.base_path, "assets", "menu.svg")
-        close_icon_path = os.path.join(self.base_path, "assets", "close.svg")
-        update_icon_path = os.path.join(self.base_path, "assets", "update.svg")
-        historical_icon_path = os.path.join(self.base_path, "assets", "historical.svg")
+        self.menu_icon_path = os.path.join(self.base_path, "assets", "menu.svg")
+        self.close_icon_path = os.path.join(self.base_path, "assets", "close.svg")
+        self.update_icon_path = os.path.join(self.base_path, "assets", "update.svg")
+        self.historical_icon_path = os.path.join(self.base_path, "assets", "historical.svg")
+        self.login_icon_path = os.path.join(self.base_path, "assets", "login.svg")
+        self.logout_icon_path = os.path.join(self.base_path, "assets", "logout.svg")
+        self.view_icon_path = os.path.join(self.base_path, "assets", "view.svg")
+        self.viewoff_icon_path = os.path.join(self.base_path, "assets", "view_off.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -71,7 +76,7 @@ class Interface(QWidget):
         # Burger menu
         self.btn_burger_menu = QPushButton(self)
         self.btn_burger_menu.setIconSize(QSize(24, 24))
-        self.btn_burger_menu.setIcon(QIcon(menu_icon_path))
+        self.btn_burger_menu.setIcon(QIcon(self.menu_icon_path))
         self.btn_burger_menu.setGeometry(10, 25, 40, 40)
         self.btn_burger_menu.setStyleSheet(f"""
             QPushButton {{
@@ -97,7 +102,7 @@ class Interface(QWidget):
 
         self.btn_close_menu = QPushButton(self.menu_frame)
         self.btn_close_menu.setIconSize(QSize(24, 24))
-        self.btn_close_menu.setIcon(QIcon(close_icon_path))
+        self.btn_close_menu.setIcon(QIcon(self.close_icon_path))
         self.btn_close_menu.setGeometry(160, 10, 30, 30)
         self.btn_close_menu.setStyleSheet("""
             QPushButton {
@@ -120,7 +125,7 @@ class Interface(QWidget):
 
         self.menu_option1 = QPushButton(" Verificar atualização", self.menu_frame)
         self.menu_option1.setGeometry(-2, 100, 200, 40)
-        self.menu_option1.setIcon(QIcon(update_icon_path))
+        self.menu_option1.setIcon(QIcon(self.update_icon_path))
         self.menu_option1.setIconSize(QSize(16, 16))
         self.menu_option1.setStyleSheet(f"""
             QPushButton {{
@@ -141,7 +146,7 @@ class Interface(QWidget):
 
         self.menu_option2 = QPushButton(" Histórico", self.menu_frame)
         self.menu_option2.setGeometry(-2, 139, 200, 40)
-        self.menu_option2.setIcon(QIcon(historical_icon_path))
+        self.menu_option2.setIcon(QIcon(self.historical_icon_path))
         self.menu_option2.setIconSize(QSize(16, 16))
         self.menu_option2.setStyleSheet(f"""
             QPushButton {{
@@ -159,6 +164,27 @@ class Interface(QWidget):
             }}
         """)
         self.menu_option2.clicked.connect(lambda: self.open_historical())
+
+        self.menu_option3 = QPushButton(" Login", self.menu_frame)
+        self.menu_option3.setGeometry(-2, 178, 200, 40)
+        self.menu_option3.setIcon(QIcon(self.login_icon_path))
+        self.menu_option3.setIconSize(QSize(16, 16))
+        self.menu_option3.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.color1};
+                color: white;
+                font-weight: bold;
+                border: 1px solid gray;
+                border-left: none;
+                border-right: none;
+                text-align: left;
+                padding-left: 10px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color3};
+            }}
+        """)
+        self.menu_option3.clicked.connect(lambda: self.login())
 
         self.label_version = QLabel(f"v{app_version}", self.menu_frame)
         self.label_version.setGeometry(15, 365, 50, 30)
@@ -318,7 +344,7 @@ class Interface(QWidget):
 
         self.close_warning_frame = QPushButton(self.warning_frame)
         self.close_warning_frame.setIconSize(QSize(16, 16))
-        self.close_warning_frame.setIcon(QIcon(close_icon_path))
+        self.close_warning_frame.setIcon(QIcon(self.close_icon_path))
         self.close_warning_frame.setGeometry(self.window_width-30, 0, 30, 30)
         self.close_warning_frame.setStyleSheet(f"""
             QPushButton {{
@@ -547,7 +573,179 @@ class Interface(QWidget):
             return 0
 
     def open_historical(self):
+        """Exibir o histórico de arquivos exportados"""
         QMessageBox.information(self, "Histórico", "Recurso em desenvolvimento.")
+
+    def login(self):
+        """Exibir a tela de login do usuário."""
+        self.login_window = QWidget(self)
+        self.login_window.setGeometry(0, 0, self.window_width, self.window_height)
+        self.login_window.setStyleSheet(f"""
+            background-color: {self.background_color};
+            color: white;
+            font-family: {self.font_family};
+        """)
+        self.login_window.show()
+
+        self.login_label = QLabel("LOGIN", self.login_window)
+        self.login_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.login_label.setGeometry(50, 30, 500, 30)
+        self.login_label.setStyleSheet(f"""font-size: 20px; font-weight: bold;""")
+        self.login_label.setFont(QFont(self.font_label, 24))
+        self.login_label.show()
+
+        self.entry_username = QLineEdit(self.login_window)
+        self.entry_username.setPlaceholderText("Usuário")
+        self.entry_username.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.entry_username.setGeometry(100, 100, 400, 40)
+        self.entry_username.setStyleSheet(f"""
+            QLineEdit {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color1};
+                color: white;
+                font-weight: bold;
+            }}
+            QLineEdit:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+        self.entry_username.textChanged.connect(self.verificar_campos_login)
+        self.entry_username.show()
+
+        self.container_password = QWidget(self.login_window)
+        self.container_password.setGeometry(100, 178, 400, 40)
+        self.container_password.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.color1};
+                border: 2px solid {self.color2};
+                border-radius: 20px;
+            }}
+            QWidget:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+        self.container_password.show()
+
+        self.entry_password = QLineEdit(self.container_password)
+        self.entry_password.setPlaceholderText("Senha")
+        self.entry_password.setEchoMode(QLineEdit.EchoMode.Password)
+        self.entry_password.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.entry_password.setGeometry(0, 0, 400, 40)
+        self.entry_password.setStyleSheet(f"""
+            padding: 10px;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border: none;
+            background-color: transparent;
+            color: white;
+        """)
+        self.entry_password.textChanged.connect(self.verificar_campos_login)  # Conecta o sinal
+        self.entry_password.show()
+
+        self.btn_login = QPushButton("Login", self.login_window)
+        self.btn_login.setGeometry(100, 260, 400, 40)
+        self.btn_login.setEnabled(False)  # Inicialmente desabilitado
+        self.btn_login.setStyleSheet(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color_disabled};
+                background-color: {self.color_disabled};
+                color: gray;
+                font-weight: bold;
+                font-family: {self.font_family};
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+        """)
+        self.btn_login.clicked.connect(lambda: self.autenticar())
+        self.btn_login.show()
+
+        self.close_login = QPushButton(self.login_window)
+        self.close_login.setIconSize(QSize(24, 24))
+        self.close_login.setIcon(QIcon(self.close_icon_path))
+        self.close_login.setGeometry(self.window_width-50, 25, 30, 30)
+        self.close_login.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: gray;
+            }}
+        """)
+        self.close_login.show()
+        self.close_login.clicked.connect(lambda: self.login_window.hide())
+
+    def verificar_campos_login(self):
+        """Habilita o botão de login se os campos de usuário e senha estiverem preenchidos."""
+        if self.entry_username.text() and self.entry_password.text():
+            self.btn_login.setEnabled(True)
+            self.btn_login.setStyleSheet(f"""
+                QPushButton {{
+                    padding: 10px;
+                    border-radius: 20px;
+                    border: 2px solid {self.color2};
+                    background-color: {self.color2};
+                    color: white;
+                    font-weight: bold;
+                    font-family: {self.font_family};
+                }}
+                QPushButton:hover {{
+                    background-color: {self.color2_hover};
+                    border-color: {self.color2_hover};
+                }}
+            """)
+        else:
+            self.btn_login.setEnabled(False)
+            self.btn_login.setStyleSheet(f"""
+                QPushButton {{
+                    padding: 10px;
+                    border-radius: 20px;
+                    border: 2px solid {self.color_disabled};
+                    background-color: {self.color_disabled};
+                    color: gray;
+                    font-weight: bold;
+                    font-family: {self.font_family};
+                }}
+            """)
+
+    def autenticar(self):
+        """Autentica o usuário."""
+        username = self.entry_username.text()
+        password = self.entry_password.text()
+
+        if not username or not password:
+            QMessageBox.critical(self, "Erro", "Preencha todos os campos.")
+            return
+
+        if auth(username, password) is True:
+            QMessageBox.information(self, "Sucesso", "Login realizado com sucesso.")
+            self.login_window.hide()
+            self.menu_option3.setText(" Logout")
+            self.menu_option3.setIcon(QIcon(self.logout_icon_path))
+        elif auth(username, password) is False:
+            QMessageBox.critical(self, "Falha no login", "Usuário inativo.")
+        else:
+            QMessageBox.critical(self, "Falha no login", "Usuário ou senha incorretos.")
+
+    def show_password(self):
+        """Exibe ou oculta a senha."""
+        if self.entry_password.echoMode() == QLineEdit.EchoMode.Password:
+            self.entry_password.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.view_password.setIcon(QIcon(self.viewoff_icon_path))
+        else:
+            self.entry_password.setEchoMode(QLineEdit.EchoMode.Password)
+            self.view_password.setIcon(QIcon(self.view_icon_path))
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
