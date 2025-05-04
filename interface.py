@@ -646,6 +646,26 @@ class Interface(QWidget):
         self.entry_password.textChanged.connect(self.verificar_campos_login)  # Conecta o sinal
         self.entry_password.show()
 
+        self.view_password = QPushButton(self.container_password)
+        self.view_password.setIconSize(QSize(16, 16))
+        self.view_password.setIcon(QIcon(self.view_icon_path))
+        self.view_password.setGeometry(360, 0, 40, 40)
+        self.view_password.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 20px;
+                font-weight: bold;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+        self.view_password.show()
+        self.view_password.clicked.connect(lambda: self.show_password())
+
         self.btn_login = QPushButton("Login", self.login_window)
         self.btn_login.setGeometry(100, 260, 400, 40)
         self.btn_login.setEnabled(False)  # Inicialmente desabilitado
