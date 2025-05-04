@@ -578,6 +578,11 @@ class Interface(QWidget):
 
     def login(self):
         """Exibir a tela de login do usuário."""
+        self.toggle_menu() # Fechar o menu
+        QTimer.singleShot(300, self.show_login_window) # Esperar 300ms para abrir a tela de login
+
+    def show_login_window(self):
+        """Exibir a janela de login."""
         self.login_window = QWidget(self)
         self.login_window.setGeometry(0, 0, self.window_width, self.window_height)
         self.login_window.setStyleSheet(f"""
@@ -704,6 +709,23 @@ class Interface(QWidget):
         """)
         self.close_login.show()
         self.close_login.clicked.connect(lambda: self.login_window.hide())
+
+        self.btn_burger_menu_login = QPushButton(self.login_window)
+        self.btn_burger_menu_login.setIcon(QIcon(self.menu_icon_path))
+        self.btn_burger_menu_login.setIconSize(QSize(24, 24))
+        self.btn_burger_menu_login.setGeometry(10, 25, 40, 40)
+        self.btn_burger_menu_login.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+                border-radius: 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color1_hover};
+            }}
+        """)
+        self.btn_burger_menu_login.show()
+        self.btn_burger_menu_login.clicked.connect(self.toggle_menu)
 
     def verificar_campos_login(self):
         """Habilita o botão de login se os campos de usuário e senha estiverem preenchidos."""
