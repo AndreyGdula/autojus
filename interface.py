@@ -189,10 +189,6 @@ class Interface(QWidget):
         """)
         self.menu_option3.clicked.connect(lambda: self.login())
 
-        self.label_version = QLabel(f"v{app_version}", self.menu_frame)
-        self.label_version.setGeometry(15, 365, 50, 30)
-        self.label_version.setStyleSheet("color: gray; font-size: 12px; font-weight: bold; border: none;")
-
         # Tela principal
         self.label_title = QLabel("Extraia seus processos para o Excel", self)
         self.label_title.setStyleSheet("font-size: 20px; font-weight: bold;")
@@ -541,6 +537,10 @@ class Interface(QWidget):
         self.warning_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.warning_login.hide()
         self.login_window.hide()
+
+        self.label_version = QLabel(f"v{app_version}", self.user_frame)
+        self.label_version.setGeometry(165, 35, 30, 10)
+        self.label_version.setStyleSheet("color: gray; font-size: 10px; font-weight: bold; border: none; text-align: right;")
 
 
     def toggle_menu(self):
