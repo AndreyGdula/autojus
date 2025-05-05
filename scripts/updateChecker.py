@@ -13,7 +13,7 @@ else:
     base_path = os.path.dirname(__file__)
 
 VERSION_URL = "https://api.github.com/repos/AndreyGdula/autojus/releases/latest"
-UPDATE_LOG = Path(__file__).parent / "updateLog.json"
+UPDATE_LOG = Path(__file__).parent / "autojusLog.json"
 TOKEN = os.getenv("AUTOJUS_KEY")
 if not TOKEN:
     dotenv_path = os.path.join(base_path, ".env")
@@ -41,7 +41,7 @@ def get_latest_version(url):
     
 
 def check_for_update(current_version):
-    """Verifica se há uma versão mais recente disponível e altera a data de última verificação no arquivo updateLog.json."""
+    """Verifica se há uma versão mais recente disponível e altera a data de última verificação no arquivo autojusLog.json."""
     if not UPDATE_LOG.exists():
         with open(UPDATE_LOG, "w") as file:
             json.dump({"last-check": "01-01-2000"}, file)  # Data inicial padrão

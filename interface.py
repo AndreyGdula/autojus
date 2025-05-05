@@ -11,13 +11,13 @@ from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 from scripts.login import auth
 
-app_version = "1.0.2"
+app_version = "1.0.1"
 
 class Interface(QWidget):
     def __init__(self):
         super().__init__()
         self.flag_export = False  # Flag da condição do botão de exportar
-        self.flag_menu = False  # Flag da condição do menu
+        self.flag_menu = False  # Flag da condição do menu)
 
         # Definindo as cores e constantes
         self.background_color = "#1e1e1e"
@@ -31,7 +31,7 @@ class Interface(QWidget):
         self.window_width = 600
         self.window_height = 400
 
-        # Definindo as fontes e icones
+        # Definindo as fontes e icones e constantes
         if getattr(sys, "frozen", False):
             self.base_path = sys._MEIPASS
         else:
@@ -46,10 +46,13 @@ class Interface(QWidget):
         self.logout_icon_path = os.path.join(self.base_path, "assets", "logout.svg")
         self.view_icon_path = os.path.join(self.base_path, "assets", "view.svg")
         self.viewoff_icon_path = os.path.join(self.base_path, "assets", "view_off.svg")
+        self.account_icon_path = os.path.join(self.base_path, "assets", "account.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
         self.font_label = QFontDatabase.applicationFontFamilies(self.font_label_id)[0]
+        self.AUTOJUS_LOG_PATH = Path(__file__).parent / "scripts" / "autojusLog.json"
+        self.SESSION_PATH = Path(__file__).parent / "scripts" / "session.json"
 
         # Configuração da janela principal
         self.setWindowTitle("Process Export System")
@@ -359,6 +362,186 @@ class Interface(QWidget):
         """)
         self.close_warning_frame.clicked.connect(lambda: self.warning_frame.hide())
 
+        # User Frame
+        self.user_frame = QFrame(self.menu_frame)
+        self.user_frame.setGeometry(0, self.window_height-50, 200, 50)
+        self.user_frame.setStyleSheet(f"""
+            background-color: {self.background_color};
+        """)
+        
+        self.icon_user = QPushButton(" Convidado", self.user_frame)
+        self.icon_user.setGeometry(10, 10, 180, 30)
+        self.icon_user.setIconSize(QSize(32, 32))
+        self.icon_user.setIcon(QIcon(self.account_icon_path))
+        self.icon_user.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+                font-family: {self.font_family};
+                text-align: left;
+            }}
+            QPushButton:hover {{
+                background-color: transparent;
+            }}
+        """)
+
+        # Carregando o usuário
+        username = self.carregar_sessao()
+        if username: # Se o usuário estiver logado
+            self.icon_user.setText(f" {username.capitalize()}")
+            self.menu_option3.setText(" Logout")
+            self.menu_option3.setIcon(QIcon(self.logout_icon_path))
+            self.menu_option3.clicked.connect(lambda: self.logout())
+        else:
+            self.icon_user.setText(" Convidado")
+
+        # Tela de login
+        self.login_window = QWidget(self)
+        self.login_window.setGeometry(0, 0, self.window_width, self.window_height)
+        self.login_window.setStyleSheet(f"""
+            background-color: {self.background_color};
+            color: white;
+            font-family: {self.font_family};
+        """)
+
+        self.login_label = QLabel("LOGIN", self.login_window)
+        self.login_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.login_label.setGeometry(50, 32, 500, 30)
+        self.login_label.setStyleSheet(f"""font-size: 20px; font-weight: bold;""")
+        self.login_label.setFont(QFont(self.font_label, 24))
+
+        self.entry_username = QLineEdit(self.login_window)
+        self.entry_username.setPlaceholderText("Usuário")
+        self.entry_username.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.entry_username.setGeometry(100, 100, 400, 40)
+        self.entry_username.setStyleSheet(f"""
+            QLineEdit {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color2};
+                background-color: {self.color1};
+                color: white;
+                font-weight: bold;
+            }}
+            QLineEdit:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+        self.entry_username.textChanged.connect(self.verificar_campos_login)
+
+        self.container_password = QWidget(self.login_window)
+        self.container_password.setGeometry(100, 178, 400, 40)
+        self.container_password.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.color1};
+                border: 2px solid {self.color2};
+                border-radius: 20px;
+            }}
+            QWidget:hover {{
+                background-color: {self.color1_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+
+        self.entry_password = QLineEdit(self.container_password)
+        self.entry_password.setPlaceholderText("Senha")
+        self.entry_password.setEchoMode(QLineEdit.EchoMode.Password)
+        self.entry_password.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.entry_password.setGeometry(0, 0, 400, 40)
+        self.entry_password.setStyleSheet(f"""
+            padding: 10px;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border: none;
+            background-color: transparent;
+            color: white;
+        """)
+        self.entry_password.textChanged.connect(self.verificar_campos_login)  # Conecta o sinal
+
+        self.view_password = QPushButton(self.container_password)
+        self.view_password.setIconSize(QSize(16, 16))
+        self.view_password.setIcon(QIcon(self.view_icon_path))
+        self.view_password.setGeometry(360, 0, 40, 40)
+        self.view_password.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 20px;
+                font-weight: bold;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border: 2px solid {self.color2_hover};
+            }}
+        """)
+        self.view_password.clicked.connect(lambda: self.show_password())
+
+        self.btn_login = QPushButton("Login", self.login_window)
+        self.btn_login.setGeometry(100, 260, 400, 40)
+        self.btn_login.setEnabled(False)  # Inicialmente desabilitado
+        self.btn_login.setStyleSheet(f"""
+            QPushButton {{
+                padding: 10px;
+                border-radius: 20px;
+                border: 2px solid {self.color_disabled};
+                background-color: {self.color_disabled};
+                color: gray;
+                font-weight: bold;
+                font-family: {self.font_family};
+            }}
+            QPushButton:hover {{
+                background-color: {self.color2_hover};
+                border-color: {self.color2_hover};
+            }}
+        """)
+        self.btn_login.clicked.connect(lambda: self.autenticar())
+
+        self.close_login = QPushButton(self.login_window)
+        self.close_login.setIconSize(QSize(24, 24))
+        self.close_login.setIcon(QIcon(self.close_icon_path))
+        self.close_login.setGeometry(self.window_width-50, 30, 30, 30)
+        self.close_login.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: gray;
+            }}
+        """)
+        self.close_login.clicked.connect(lambda: self.login_window.hide())
+
+        self.btn_burger_menu_login = QPushButton(self.login_window)
+        self.btn_burger_menu_login.setIcon(QIcon(self.menu_icon_path))
+        self.btn_burger_menu_login.setIconSize(QSize(24, 24))
+        self.btn_burger_menu_login.setGeometry(10, 25, 40, 40)
+        self.btn_burger_menu_login.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+                border-radius: 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.color1_hover};
+            }}
+        """)
+        self.btn_burger_menu_login.show()
+        self.btn_burger_menu_login.clicked.connect(self.toggle_menu)
+
+        self.warning_login = QLabel("", self.login_window)
+        self.warning_login.setGeometry(100, 224, 400, 30)
+        self.warning_login.setFont(QFont(self.font_label, 8))
+        self.warning_login.setStyleSheet("color: red")
+        self.warning_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.warning_login.hide()
+        self.login_window.hide()
+
 
     def toggle_menu(self):
         """Mostra ou oculta o menu hambúrguer."""
@@ -440,6 +623,10 @@ class Interface(QWidget):
 
     def exportar(self, pdf_path, excel_path):
         """Exporta os dados do processo para o Excel."""
+        if not self.verificar_limite_exportar():
+            self.btn_exportar.setEnabled(False)
+            return
+
         if self.flag_export:
             self.resetar_botao()
 
@@ -563,10 +750,9 @@ class Interface(QWidget):
 
     def ultima_verificacao(self):
         """Retorna quando foi a última verificação automática de atualização."""
-        UPDATE_LOG_PATH = Path(__file__).parent / "scripts" / "updateLog.json"
-        intervalo_dias = 1
+        intervalo_dias = 15
         try:
-            with open(UPDATE_LOG_PATH, "r") as file:
+            with open(self.AUTOJUS_LOG_PATH, "r") as file:
                 data = json.load(file)
                 last_check = datetime.strptime(data["last-check"], "%d-%m-%Y").date()
                 today = datetime.today().date()
@@ -591,161 +777,22 @@ class Interface(QWidget):
     def login(self):
         """Exibir a tela de login do usuário."""
         self.toggle_menu() # Fechar o menu
+        self.menu_option3.clicked.connect(lambda: self.logout())
         QTimer.singleShot(200, self.show_login_window) # Esperar 300ms para abrir a tela de login
+
+
+    def logout(self):
+        """Faz o logout do usuário."""
+        self.limpar_sessao()
+        self.icon_user.setText(" Convidado")
+        self.menu_option3.setText(" Login")
+        self.menu_option3.setIcon(QIcon(self.login_icon_path))
+        self.menu_option3.clicked.connect(lambda: self.login())
 
 
     def show_login_window(self):
         """Exibir a janela de login."""
-        self.login_window = QWidget(self)
-        self.login_window.setGeometry(0, 0, self.window_width, self.window_height)
-        self.login_window.setStyleSheet(f"""
-            background-color: {self.background_color};
-            color: white;
-            font-family: {self.font_family};
-        """)
         self.login_window.show()
-
-        self.login_label = QLabel("LOGIN", self.login_window)
-        self.login_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.login_label.setGeometry(50, 32, 500, 30)
-        self.login_label.setStyleSheet(f"""font-size: 20px; font-weight: bold;""")
-        self.login_label.setFont(QFont(self.font_label, 24))
-        self.login_label.show()
-
-        self.entry_username = QLineEdit(self.login_window)
-        self.entry_username.setPlaceholderText("Usuário")
-        self.entry_username.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.entry_username.setGeometry(100, 100, 400, 40)
-        self.entry_username.setStyleSheet(f"""
-            QLineEdit {{
-                padding: 10px;
-                border-radius: 20px;
-                border: 2px solid {self.color2};
-                background-color: {self.color1};
-                color: white;
-                font-weight: bold;
-            }}
-            QLineEdit:hover {{
-                background-color: {self.color1_hover};
-                border: 2px solid {self.color2_hover};
-            }}
-        """)
-        self.entry_username.textChanged.connect(self.verificar_campos_login)
-        self.entry_username.show()
-
-        self.container_password = QWidget(self.login_window)
-        self.container_password.setGeometry(100, 178, 400, 40)
-        self.container_password.setStyleSheet(f"""
-            QWidget {{
-                background-color: {self.color1};
-                border: 2px solid {self.color2};
-                border-radius: 20px;
-            }}
-            QWidget:hover {{
-                background-color: {self.color1_hover};
-                border: 2px solid {self.color2_hover};
-            }}
-        """)
-        self.container_password.show()
-
-        self.entry_password = QLineEdit(self.container_password)
-        self.entry_password.setPlaceholderText("Senha")
-        self.entry_password.setEchoMode(QLineEdit.EchoMode.Password)
-        self.entry_password.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.entry_password.setGeometry(0, 0, 400, 40)
-        self.entry_password.setStyleSheet(f"""
-            padding: 10px;
-            border-top-left-radius: 20px;
-            border-bottom-left-radius: 20px;
-            border: none;
-            background-color: transparent;
-            color: white;
-        """)
-        self.entry_password.textChanged.connect(self.verificar_campos_login)  # Conecta o sinal
-        self.entry_password.show()
-
-        self.view_password = QPushButton(self.container_password)
-        self.view_password.setIconSize(QSize(16, 16))
-        self.view_password.setIcon(QIcon(self.view_icon_path))
-        self.view_password.setGeometry(360, 0, 40, 40)
-        self.view_password.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: white;
-                border-radius: 20px;
-                font-weight: bold;
-                border: none;
-            }}
-            QPushButton:hover {{
-                background-color: {self.color2_hover};
-                border: 2px solid {self.color2_hover};
-            }}
-        """)
-        self.view_password.show()
-        self.view_password.clicked.connect(lambda: self.show_password())
-
-        self.btn_login = QPushButton("Login", self.login_window)
-        self.btn_login.setGeometry(100, 260, 400, 40)
-        self.btn_login.setEnabled(False)  # Inicialmente desabilitado
-        self.btn_login.setStyleSheet(f"""
-            QPushButton {{
-                padding: 10px;
-                border-radius: 20px;
-                border: 2px solid {self.color_disabled};
-                background-color: {self.color_disabled};
-                color: gray;
-                font-weight: bold;
-                font-family: {self.font_family};
-            }}
-            QPushButton:hover {{
-                background-color: {self.color2_hover};
-                border-color: {self.color2_hover};
-            }}
-        """)
-        self.btn_login.clicked.connect(lambda: self.autenticar())
-        self.btn_login.show()
-
-        self.close_login = QPushButton(self.login_window)
-        self.close_login.setIconSize(QSize(24, 24))
-        self.close_login.setIcon(QIcon(self.close_icon_path))
-        self.close_login.setGeometry(self.window_width-50, 30, 30, 30)
-        self.close_login.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: white;
-                border-radius: 15px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: gray;
-            }}
-        """)
-        self.close_login.show()
-        self.close_login.clicked.connect(lambda: self.login_window.hide())
-
-        self.btn_burger_menu_login = QPushButton(self.login_window)
-        self.btn_burger_menu_login.setIcon(QIcon(self.menu_icon_path))
-        self.btn_burger_menu_login.setIconSize(QSize(24, 24))
-        self.btn_burger_menu_login.setGeometry(10, 25, 40, 40)
-        self.btn_burger_menu_login.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                border: none;
-                border-radius: 20px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.color1_hover};
-            }}
-        """)
-        self.btn_burger_menu_login.show()
-        self.btn_burger_menu_login.clicked.connect(self.toggle_menu)
-
-        self.warning_login = QLabel("", self.login_window)
-        self.warning_login.setGeometry(100, 224, 400, 30)
-        self.warning_login.setFont(QFont(self.font_label, 8))
-        self.warning_login.setStyleSheet("color: red")
-        self.warning_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.warning_login.hide()
 
 
     def verificar_campos_login(self):
@@ -812,15 +859,13 @@ class Interface(QWidget):
         username = self.entry_username.text()
         password = self.entry_password.text()
 
-        if not username or not password:
-            QMessageBox.critical(self, "Erro", "Preencha todos os campos.")
-            return
-
         if auth(username, password) is True: # Sucesso no login
-            QMessageBox.information(self, "Sucesso", "Login realizado com sucesso.")
             self.login_window.hide()
             self.menu_option3.setText(" Logout")
             self.menu_option3.setIcon(QIcon(self.logout_icon_path))
+            self.icon_user.setText(f" {username.capitalize()}")
+            self.toggle_menu() # Abrir o menu
+            self.salvar_sessao(username)
 
         elif auth(username, password) is False: # Usuário inativo
             self.entry_username.setStyleSheet(f"""
@@ -916,6 +961,73 @@ class Interface(QWidget):
         else:
             self.entry_password.setEchoMode(QLineEdit.EchoMode.Password)
             self.view_password.setIcon(QIcon(self.view_icon_path))
+
+
+    def verificar_limite_exportar(self):
+        """Verifica o limite de exportações para usuários não logados."""
+        limit_export = 5
+        days_limit = 1
+
+        if self.AUTOJUS_LOG_PATH.exists():
+            with open(self.AUTOJUS_LOG_PATH, "r") as file:
+                export_data = json.load(file)
+        else:
+            export_data = {"export_count": 0, "last_export": None}
+        
+        if self.icon_user.text().strip() != "Convidado":
+            return True
+        
+        last_export = export_data.get("last-export")
+        if last_export:
+            last_export_date = datetime.strptime(last_export, "%d-%m-%Y %H:%M:%S")
+            time_diff = datetime.now() - last_export_date
+
+            if time_diff.days >= days_limit:
+                export_data["export-count"] = 0
+        
+        if export_data["export-count"] >= limit_export:
+            QMessageBox.critical(self, "Limite de Exportação", "Você atingiu o limite de exportações para usuários não logados.")
+            self.btn_exportar.setEnabled(False)
+            self.btn_exportar.setStyleSheet(f"""
+                QPushButton {{
+                    padding: 10px;
+                    border-radius: 20px;
+                    border: 2px solid {self.color_disabled};
+                    background-color: {self.color_disabled};
+                    color: gray;
+                    font-weight: bold;
+                    font-family: {self.font_family};
+                }}
+            """)
+            return False
+        
+        export_data["export-count"] += 1
+        export_data["last-export"] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+        with open(self.AUTOJUS_LOG_PATH, "w") as file:
+            json.dump(export_data, file)
+
+        return True
+    
+
+    def salvar_sessao(self, username):
+        """Salvar a sessão atual do usuário."""
+        with open(self.SESSION_PATH, "w") as file:
+            json.dump({"username": username}, file)
+
+    def carregar_sessao(self):
+        """Carregar a sessão atual do usuário."""
+        if self.SESSION_PATH.exists():
+            with open(self.SESSION_PATH, "r") as file:
+                session_data = json.load(file)
+                return session_data.get("username")
+        return None
+    
+    def limpar_sessao(self):
+        """Limpar a sessão atual do usuário."""
+        if self.SESSION_PATH.exists():
+            with open(self.SESSION_PATH, "w") as file:
+                json.dump({"username": None}, file)
 
 
 if __name__ == "__main__":
