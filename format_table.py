@@ -1,6 +1,5 @@
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
 import sys
 
 def adjust_col(ws, larguras_minimas):
@@ -37,5 +36,7 @@ def format(excel_path):
 
     wb.save(excel_path)
 
-excel_path = sys.argv[1]
-format(excel_path)
+# Executar apenas se o arquivo for executado diretamente
+if __name__ == "__main__":
+    excel_path = sys.argv[1]
+    format(excel_path)

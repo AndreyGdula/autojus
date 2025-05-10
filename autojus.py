@@ -2,8 +2,8 @@ import fitz
 import pandas as pd
 import re
 import os
-import subprocess as sb
 from openpyxl import load_workbook
+from format_table import format
 
 
 # Função para extrair texto do PDF
@@ -117,4 +117,4 @@ def main(pdf_path, excel_path, confirm_callback, anima_botao):
     # Salvando no Excel
     df_final.to_excel(excel_path, index=False)
     move_col(excel_path)
-    sb.run(["python", "format_table.py", excel_path], creationflags=sb.CREATE_NO_WINDOW)  # Formatar arquivo Excel
+    format(excel_path)  # Formatar arquivo Excel
