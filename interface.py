@@ -640,6 +640,8 @@ class Interface(QWidget):
 
         except sb.CalledProcessError as e:
             QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
+        except PermissionError:
+            QMessageBox.critical(self, "Erro", f"Parece que você está com o arquivo Excel aberto, feche-o antes de exportar.")
         except Exception as e:
             QMessageBox.critical(self, "Erro Inesperado", f"{e}")
 
