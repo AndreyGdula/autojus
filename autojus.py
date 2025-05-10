@@ -80,7 +80,7 @@ def move_col(excel_path):
     wb.close()
 
 
-def main(pdf_path, excel_path, confirm_callback, anima_botao):
+def main(pdf_path, excel_path, confirm_callback):
     # Regex
     padrao_processo = r"Processo nº: (\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})"
     padrao_autor = r"Autor: (.+)"
@@ -100,17 +100,14 @@ def main(pdf_path, excel_path, confirm_callback, anima_botao):
             confirm_edit = confirm_callback(f"O processo {df_novo['Número do Processo'].iloc[0]} já existe no arquivo Excel. Deseja atualizar as informações?")
             if confirm_edit:
                 df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last") # Operação realizada com sucesso
-                anima_botao()
             else:
                 df_final = df_existente
         else:
             df_final = pd.concat([df_existente, df_novo]).drop_duplicates(subset=["Número do Processo"], keep="last") # Operação realizada com sucesso
-            anima_botao()
     else:
         confirm_create = confirm_callback("O arquivo Excel não existe. Deseja criar um novo?")
         if confirm_create:
             df_final = df_novo
-            anima_botao()
         else:
             return
 

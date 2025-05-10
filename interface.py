@@ -636,7 +636,8 @@ class Interface(QWidget):
             excel_path = desktop_path / "processos_extraidos.xlsx"
 
         try:
-            main(pdf_path, excel_path, self.confirm, self.animar_botao)
+            main(pdf_path, excel_path, self.confirm)
+            self.animar_botao()
 
         except sb.CalledProcessError as e:
             QMessageBox.critical(self, "Erro", f"Erro ao processar o arquivo: {e}")
