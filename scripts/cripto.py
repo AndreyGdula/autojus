@@ -9,7 +9,6 @@ class Cripto:
 
     def load_key(self):
         key = os.environ.get("Ajcrkey")
-        print(key)
         if not key:
             raise RuntimeError("Variável de ambiente não definida.")
         return key.encode()
@@ -30,5 +29,3 @@ class Cripto:
             return json.loads(decrypted.decode("utf-8"))
         except Exception:
             return {}
-
-print(Cripto())
