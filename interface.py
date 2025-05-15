@@ -10,6 +10,7 @@ from datetime import datetime
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
 from scripts.login import auth
+from scripts.cripto import Cripto
 
 app_version = "1.0.1"
 
@@ -17,7 +18,8 @@ class Interface(QWidget):
     def __init__(self):
         super().__init__()
         self.flag_export = False  # Flag da condição do botão de exportar
-        self.flag_menu = False  # Flag da condição do menu)
+        self.flag_menu = False  # Flag da condição do menu
+        self.cripto = Cripto()
 
         # Definindo as cores e constantes
         self.background_color = "#1e1e1e"
@@ -738,37 +740,42 @@ class Interface(QWidget):
 
     def verificar_updade(self):
         """Verifica se há atualizações disponíveis."""
-        if check_for_update(app_version) == 0:
-            QMessageBox.information(self, "Atualização", "Você já está na versão mais recente.")
-        else:
-            if self.confirm(f"A versão {check_for_update(app_version)[0]} já está disponível, Deseja atualizar?"):
-                try:
-                    download_update()
-                    QApplication.quit()
-                except Exception as e:
-                    QMessageBox.critical(self, "Erro", f"Erro ao baixar a atualização: {e}")
+        self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, {"last-check": datetime.today().strftime("%d-%m-%Y")})
+        try:
+            if check_for_update(app_version) == 0:
+                QMessageBox.information(self, "Atualização", "Você já está na versão mais recente.")
             else:
-                return
+                if self.confirm(f"A versão {check_for_update(app_version)[0]} já está disponível, Deseja atualizar?"):
+                    try:
+                        download_update()
+                        QApplication.quit()
+                    except Exception as e:
+                        QMessageBox.critical(self, "Erro", f"Erro ao baixar a atualização: {e}")
+                else:
+                    return
+        except TypeError:
+            QMessageBox.critical(self, "Erro", "Erro ao encontrar o token de verificação de atualização")
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao verificar atualização: {e}")
     
 
     def ultima_verificacao(self):
         """Retorna quando foi a última verificação automática de atualização."""
         intervalo_dias = 15
         try:
-            with open(self.AUTOJUS_LOG_PATH, "r") as file:
-                data = json.load(file)
-                last_check = datetime.strptime(data["last-check"], "%d-%m-%Y").date()
-                today = datetime.today().date()
-                if not last_check or (today - last_check).days >= intervalo_dias:
-                    if check_for_update(app_version) == 0: # 0 == Atualizado
-                        return 0
-                    else:
-                        self.warning_frame.show()
-                        return check_for_update(app_version)[0]
-                else:
+            data = self.cripto.load_json_cripto(self.AUTOJUS_LOG_PATH)
+            last_check = datetime.strptime(data["last-check"], "%d-%m-%Y").date()
+            today = datetime.today().date()
+            if not last_check or (today - last_check).days >= intervalo_dias:
+                if check_for_update(app_version) == 0: # 0 == Atualizado
                     return 0
+                else:
+                    self.warning_frame.show()
+                    return check_for_update(app_version)[0]
+            else:
+                return 0
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao ler o arquivo de log: {e}")
+            QMessageBox.critical(self, f"{type(e)}", f"Erro ao checar a última verificação de atualização: {e}")
             return 0
 
 
@@ -971,11 +978,12 @@ class Interface(QWidget):
         limit_export = 5
         days_limit = 1
 
-        if self.AUTOJUS_LOG_PATH.exists():
-            with open(self.AUTOJUS_LOG_PATH, "r") as file:
-                export_data = json.load(file)
-        else:
-            export_data = {"export_count": 0, "last_export": None}
+        if not self.AUTOJUS_LOG_PATH.exists():
+            self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, {"export-count": 0, "last-export": None})
+
+        export_data = self.cripto.load_json_cripto(self.AUTOJUS_LOG_PATH)
+        if not export_data:
+            export_data = {"export-count": 0, "last-export": None}
         
         if self.icon_user.text().strip() != "Convidado":
             return True
@@ -1006,31 +1014,23 @@ class Interface(QWidget):
         
         export_data["export-count"] += 1
         export_data["last-export"] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-
-        with open(self.AUTOJUS_LOG_PATH, "w") as file:
-            json.dump(export_data, file)
+        self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, export_data)
 
         return True
     
 
     def salvar_sessao(self, username):
         """Salvar a sessão atual do usuário."""
-        with open(self.SESSION_PATH, "w") as file:
-            json.dump({"username": username}, file)
+        self.cripto.save_json_cripto(self.SESSION_PATH, {"username": username})
 
     def carregar_sessao(self):
         """Carregar a sessão atual do usuário."""
-        if self.SESSION_PATH.exists():
-            with open(self.SESSION_PATH, "r") as file:
-                session_data = json.load(file)
-                return session_data.get("username")
-        return None
+        session_data = self.cripto.load_json_cripto(self.SESSION_PATH)
+        return session_data.get("username") if session_data else None
     
     def limpar_sessao(self):
         """Limpar a sessão atual do usuário."""
-        if self.SESSION_PATH.exists():
-            with open(self.SESSION_PATH, "w") as file:
-                json.dump({"username": None}, file)
+        self.cripto.save_json_cripto(self.SESSION_PATH, {"username": None})
 
 
 if __name__ == "__main__":

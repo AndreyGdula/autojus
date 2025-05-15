@@ -14,11 +14,7 @@ else:
 
 VERSION_URL = "https://api.github.com/repos/AndreyGdula/autojus/releases/latest"
 UPDATE_LOG = Path(__file__).parent / "autojusLog.json"
-TOKEN = os.getenv("AUTOJUS_KEY")
-if not TOKEN:
-    dotenv_path = os.path.join(base_path, ".env")
-    load_dotenv(dotenv_path)
-    TOKEN = os.getenv("GITHUB_TOKEN")
+TOKEN = os.getenv("Ajpikey")
 
 headers = {
     "Authorization": f"token {TOKEN}",
