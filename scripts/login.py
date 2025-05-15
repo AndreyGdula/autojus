@@ -5,7 +5,7 @@ import os
 
 def load_users():
     """Carrega os usuários do arquivo JSON hospedado no GitHub."""
-    url = "https://api.github.com/repos/AndreyGdula/autojus-users/contents/users.json"
+    url = "https://api.github.com/repos/AndreyGdula/db-storage/contents/autojus/users.json"
     headers = {
         "Authorization": f"token {os.getenv('AUTOJUS_KEY')}",
         "Accept": "application/vnd.github.v3+json"
