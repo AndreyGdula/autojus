@@ -1,11 +1,10 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize, QUrl
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QTimer, QRect, QSize
 from PyQt6.QtGui import QColor, QIcon, QFontDatabase, QFont
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect, QFrame
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QFileDialog, QMessageBox, QGraphicsColorizeEffect, QFrame, QTableWidget, QTableWidgetItem
 from pathlib import Path
 import sys
 import subprocess as sb 
 import os
-import json
 from datetime import datetime
 from autojus import main
 from scripts.updateChecker import check_for_update, download_update
@@ -54,10 +53,11 @@ class Interface(QWidget):
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
         self.font_label = QFontDatabase.applicationFontFamilies(self.font_label_id)[0]
         self.AUTOJUS_LOG_PATH = Path(__file__).parent / "scripts" / "autojusLog.json"
+        self.autojus_log_cripto = self.cripto.load_json_cripto(self.AUTOJUS_LOG_PATH)
         self.SESSION_PATH = Path(__file__).parent / "scripts" / "session.json"
 
         # Configuração da janela principal
-        self.setWindowTitle("Process Export System")
+        self.setWindowTitle("AutoJus")
         self.setGeometry(100, 100, self.window_width, self.window_height)
         self.setFixedSize(self.window_width, self.window_height)
         self.setStyleSheet(f"background-color: {self.background_color}; color: white")
@@ -498,11 +498,11 @@ class Interface(QWidget):
         """)
         self.btn_login.clicked.connect(lambda: self.autenticar())
 
-        self.close_login = QPushButton(self.login_window)
-        self.close_login.setIconSize(QSize(24, 24))
-        self.close_login.setIcon(QIcon(self.close_icon_path))
-        self.close_login.setGeometry(self.window_width-50, 30, 30, 30)
-        self.close_login.setStyleSheet(f"""
+        self.btn_close = QPushButton(self)
+        self.btn_close.setIconSize(QSize(24, 24))
+        self.btn_close.setIcon(QIcon(self.close_icon_path))
+        self.btn_close.setGeometry(self.window_width-50, 30, 30, 30)
+        self.btn_close.setStyleSheet(f"""
             QPushButton {{
                 background-color: transparent;
                 color: white;
@@ -513,24 +513,7 @@ class Interface(QWidget):
                 background-color: gray;
             }}
         """)
-        self.close_login.clicked.connect(lambda: self.login_window.hide())
-
-        self.btn_burger_menu_login = QPushButton(self.login_window)
-        self.btn_burger_menu_login.setIcon(QIcon(self.menu_icon_path))
-        self.btn_burger_menu_login.setIconSize(QSize(24, 24))
-        self.btn_burger_menu_login.setGeometry(10, 25, 40, 40)
-        self.btn_burger_menu_login.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                border: none;
-                border-radius: 20px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.color1_hover};
-            }}
-        """)
-        self.btn_burger_menu_login.show()
-        self.btn_burger_menu_login.clicked.connect(self.toggle_menu)
+        self.btn_close.hide()
 
         self.warning_login = QLabel("", self.login_window)
         self.warning_login.setGeometry(100, 224, 400, 30)
@@ -543,6 +526,41 @@ class Interface(QWidget):
         self.label_version = QLabel(f"v{app_version}", self.user_frame)
         self.label_version.setGeometry(165, 35, 30, 10)
         self.label_version.setStyleSheet("color: gray; font-size: 10px; font-weight: bold; border: none; text-align: right;")
+
+
+        # Janela do histórico
+        self.historico_log = self.autojus_log_cripto.get("historico", []) # Json com o histórico
+        self.historico_window = QWidget(self)
+        self.historico_window.setGeometry(0, 0, self.window_width, self.window_height)
+        self.historico_window.setStyleSheet(f"background-color: {self.background_color}; color: white")
+        self.historico_window.hide()
+
+        # Título
+        self.historico_label = QLabel("Histórico", self.historico_window)
+        self.historico_label.setGeometry(50, 30, self.window_width-100, 30)
+        self.historico_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.historico_label.setFont(QFont(self.font_label, 24))
+
+        # Tabela
+        self.historico_table = QTableWidget(self.historico_window)
+        self.historico_table.setGeometry(50, 70, 500, 250)
+        self.historico_table.setColumnCount(3)
+        self.historico_table.setHorizontalHeaderLabels(['Data/Hora', 'Arquivo de origem', 'Arquivo de destino'])
+        self.historico_table.setRowCount(len(self.historico_log))
+        self.historico_table.setColumnWidth(0, 116)  # Data
+        self.historico_table.setColumnWidth(1, 183)  # Origem
+        self.historico_table.setColumnWidth(2, 183)  # Destino
+        self.historico_table.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {self.color1};
+                color: white;
+                border: 1px solid gray;
+            }}
+            QHeaderView::section {{
+                background-color: {self.background_color};
+                font-weight: bold;
+            }}
+        """)
 
 
     def toggle_menu(self):
@@ -569,6 +587,10 @@ class Interface(QWidget):
         self.animation.setEndValue(QRect(target_x, 0, 200, self.window_height))
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.animation.start()
+
+        # Se estiver fechando o menu, traga o botão para frente ao final da animação
+        if target_x < 0:
+            self.animation.finished.connect(self.btn_burger_menu.raise_)
 
 
     def selecionar_arquivo_pdf(self):
@@ -639,6 +661,12 @@ class Interface(QWidget):
 
         try:
             main(pdf_path, excel_path, self.confirm)
+            self.historico_log.append({
+                "data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "origem": Path(pdf_path).name,
+                "destino": Path(excel_path).name,
+            })
+            self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, {"historico": self.historico_log})
             self.animar_botao()
 
         except sb.CalledProcessError as e:
@@ -763,7 +791,7 @@ class Interface(QWidget):
         """Retorna quando foi a última verificação automática de atualização."""
         intervalo_dias = 15
         try:
-            data = self.cripto.load_json_cripto(self.AUTOJUS_LOG_PATH)
+            data = self.autojus_log_cripto
             last_check = datetime.strptime(data["last-check"], "%d-%m-%Y").date()
             today = datetime.today().date()
             if not last_check or (today - last_check).days >= intervalo_dias:
@@ -774,14 +802,26 @@ class Interface(QWidget):
                     return check_for_update(app_version)[0]
             else:
                 return 0
+        except KeyError:
+            return 0
         except Exception as e:
-            QMessageBox.critical(self, f"{type(e)}", f"Erro ao checar a última verificação de atualização: {e}")
+            QMessageBox.critical(self, f"Erro", f"Erro ao checar a última verificação de atualização: {e}")
             return 0
 
 
     def open_historical(self):
         """Exibir o histórico de arquivos exportados"""
-        QMessageBox.information(self, "Histórico", "Recurso em desenvolvimento.")
+        self.historico_window.show()
+        self.toggle_menu()
+        self.btn_close.show()
+        self.btn_close.raise_()
+        self.btn_close.clicked.connect(lambda: [self.historico_window.hide(), self.btn_close.hide()])
+
+        self.historico_table.setRowCount(len(self.historico_log))
+        for i, item in enumerate(self.historico_log):
+            self.historico_table.setItem(i, 0, QTableWidgetItem(item["data"]))
+            self.historico_table.setItem(i, 1, QTableWidgetItem(item["origem"]))
+            self.historico_table.setItem(i, 2, QTableWidgetItem(item["destino"]))
 
 
     def login(self):
@@ -803,6 +843,9 @@ class Interface(QWidget):
     def show_login_window(self):
         """Exibir a janela de login."""
         self.login_window.show()
+        self.btn_close.clicked.connect(lambda: [self.login_window.hide(), self.btn_close.hide()])
+        self.btn_close.raise_()
+        self.btn_close.show()
 
 
     def verificar_campos_login(self):
@@ -981,10 +1024,14 @@ class Interface(QWidget):
         if not self.AUTOJUS_LOG_PATH.exists():
             self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, {"export-count": 0, "last-export": None})
 
-        export_data = self.cripto.load_json_cripto(self.AUTOJUS_LOG_PATH)
+        export_data = self.autojus_log_cripto
         if not export_data:
             export_data = {"export-count": 0, "last-export": None}
         
+        if "export-count" not in export_data or "last-export" not in export_data:
+            export_data["export-count"] = 0
+            export_data["last-export"] = None
+
         if self.icon_user.text().strip() != "Convidado":
             return True
         
