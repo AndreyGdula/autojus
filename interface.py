@@ -48,6 +48,8 @@ class Interface(QWidget):
         self.view_icon_path = os.path.join(self.base_path, "assets", "view.svg")
         self.viewoff_icon_path = os.path.join(self.base_path, "assets", "view_off.svg")
         self.account_icon_path = os.path.join(self.base_path, "assets", "account.svg")
+        self.search_icon_path = os.path.join(self.base_path, "assets", "search.svg")
+        self.delete_icon_path = os.path.join(self.base_path, "assets", "delete.svg")
         self.font_id = QFontDatabase.addApplicationFont(font1_path)
         self.font_family = QFontDatabase.applicationFontFamilies(self.font_id)[0]
         self.font_label_id = QFontDatabase.addApplicationFont(font2_path)
@@ -535,26 +537,78 @@ class Interface(QWidget):
         self.historico_window.setStyleSheet(f"background-color: {self.background_color}; color: white")
         self.historico_window.hide()
 
-        # Título
-        self.historico_label = QLabel("Histórico", self.historico_window)
-        self.historico_label.setGeometry(50, 30, self.window_width-100, 30)
-        self.historico_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.historico_label.setFont(QFont(self.font_label, 24))
+        # Campo de pesquisa
+        self.container_search = QWidget(self.historico_window)
+        self.container_search.setGeometry(60, 30, self.window_width-165, 30)
+        self.container_search.setStyleSheet(f"""
+            QWidget {{
+                padding: 10px;
+                border-radius: 15px;
+                border: 2px solid {self.color1};
+                background-color: {self.color1};
+                color: white;
+                font-weight: bold;
+            }}
+        """)
+        self.search_icon = QPushButton(self.container_search)
+        self.search_icon.setGeometry(0, 0, 30, 30)
+        self.search_icon.setIcon(QIcon(self.search_icon_path))
+        self.search_icon.setIconSize(QSize(18, 18))
+        self.search_icon.setEnabled(False)
+        self.search_icon.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px
+                font-weight: bold;
+            }}
+        """)
+        self.search_entry = QLineEdit(self.container_search)
+        self.search_entry.setGeometry(30, 0, self.window_width-205, 30)
+        self.search_entry.setPlaceholderText("Pesquisa")
+        self.search_entry.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: transparent;
+                color: white;
+                border: none;
+                padding: 0px;
+                font-size: 12px
+            }}
+        """)
+        self.search_entry.textChanged.connect(lambda: self.pesquisar_historico())
+
+        # Apagar histórico
+        self.delete_icon = QPushButton(self.historico_window)
+        self.delete_icon.setIcon(QIcon(self.delete_icon_path))
+        self.delete_icon.setIconSize(QSize(24, 24))
+        self.delete_icon.setGeometry(self.window_width-90, 30, 30, 30)
+        self.delete_icon.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: white;
+                border-radius: 15px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: gray;
+            }}
+        """)
+        self.delete_icon.clicked.connect(lambda: self.apagar_historico())
 
         # Tabela
         self.historico_table = QTableWidget(self.historico_window)
-        self.historico_table.setGeometry(50, 70, 500, 250)
+        self.historico_table.setGeometry(0, 75, self.window_width-10, self.window_height-90)
         self.historico_table.setColumnCount(3)
         self.historico_table.setHorizontalHeaderLabels(['Data/Hora', 'Arquivo de origem', 'Arquivo de destino'])
         self.historico_table.setRowCount(len(self.historico_log))
-        self.historico_table.setColumnWidth(0, 116)  # Data
-        self.historico_table.setColumnWidth(1, 183)  # Origem
-        self.historico_table.setColumnWidth(2, 183)  # Destino
+        self.historico_table.setColumnWidth(0, 115)  # Data
+        self.historico_table.setColumnWidth(1, 230)  # Origem
+        self.historico_table.setColumnWidth(2, 230)  # Destino
         self.historico_table.setStyleSheet(f"""
             QTableWidget {{
                 background-color: {self.color1};
                 color: white;
-                border: 1px solid gray;
+                border: none;
             }}
             QHeaderView::section {{
                 background-color: {self.background_color};
@@ -817,11 +871,57 @@ class Interface(QWidget):
         self.btn_close.raise_()
         self.btn_close.clicked.connect(lambda: [self.historico_window.hide(), self.btn_close.hide()])
 
-        self.historico_table.setRowCount(len(self.historico_log))
-        for i, item in enumerate(self.historico_log):
-            self.historico_table.setItem(i, 0, QTableWidgetItem(item["data"]))
-            self.historico_table.setItem(i, 1, QTableWidgetItem(item["origem"]))
-            self.historico_table.setItem(i, 2, QTableWidgetItem(item["destino"]))
+        if not self.historico_log:
+            self.historico_vazio("Histórico vazio")
+        else:
+            self.historico_table.setSpan(0, 0, 1, 1)
+            self.historico_table.setRowCount(len(self.historico_log))
+            for i, item in enumerate(self.historico_log):
+                self.historico_table.setItem(i, 0, QTableWidgetItem(item["data"]))
+                self.historico_table.setItem(i, 1, QTableWidgetItem(item["origem"]))
+                self.historico_table.setItem(i, 2, QTableWidgetItem(item["destino"]))
+            for row in range(self.historico_table.rowCount()):
+                item = self.historico_table.item(row, 0)
+                if item:
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def apagar_historico(self):
+        """Apagar o histórico de exportações do usuário."""
+        self.historico_log = []
+        self.cripto.save_json_cripto(self.AUTOJUS_LOG_PATH, {"historico": self.historico_log})
+        self.historico_vazio("Histórico vazio")
+
+    def historico_vazio(self, msg):
+        self.historico_table.setRowCount(1)
+        item = QTableWidgetItem(msg)
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.historico_table.setItem(0, 0, item)
+        self.historico_table.setItem(0, 1, QTableWidgetItem(""))
+        self.historico_table.setItem(0, 2, QTableWidgetItem(""))
+        self.historico_table.setSpan(0, 0, 1, 3)
+
+    def pesquisar_historico(self):
+        """Filtra e exibe os itens procurados no search_entry"""
+        pesquisa = self.search_entry.text().lower().strip()
+        if not pesquisa:
+            resultados = self.historico_log
+        else:
+            resultados = [
+                item for item in self.historico_log
+                if pesquisa in item["data"].lower()
+                or pesquisa in item["origem"].lower()
+                or pesquisa in item["destino"].lower()
+            ]
+        
+        self.historico_table.setSpan(0, 0, 1, 1)
+        if not resultados:
+            self.historico_vazio("O termo digitado não foi encontrado.")
+        else:
+            self.historico_table.setRowCount(len(resultados))
+            for i, item in enumerate(resultados):
+                self.historico_table.setItem(i, 0, QTableWidgetItem(item["data"]))
+                self.historico_table.setItem(i, 1, QTableWidgetItem(item["origem"]))
+                self.historico_table.setItem(i, 2, QTableWidgetItem(item["destino"]))
 
 
     def login(self):
@@ -1045,6 +1145,7 @@ class Interface(QWidget):
         
         if export_data["export-count"] >= limit_export:
             QMessageBox.critical(self, "Limite de Exportação", "Você atingiu o limite de exportações para usuários não logados.")
+            self.entry_path_pdf.clear()
             self.btn_exportar.setEnabled(False)
             self.btn_exportar.setStyleSheet(f"""
                 QPushButton {{
